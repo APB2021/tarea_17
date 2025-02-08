@@ -14,6 +14,6 @@ public class Ejecutador1 {
 		AlumnosDAO modelo = new AlumnosBD();
 		IVista vista = new VistaConsola();
 		new Controlador().ejecutar(modelo, vista);
-		
+
 	}
 }
