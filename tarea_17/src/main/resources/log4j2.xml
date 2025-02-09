@@ -7,7 +7,7 @@
         </Console>
 
         <!-- Archivo principal para logs generales -->
-        <File name="GeneralFile" fileName="logs/tarea_16.log" append="true">
+        <File name="GeneralFile" fileName="logs/tarea_17.log" append="true">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c - %m%n" />
         </File>
 
