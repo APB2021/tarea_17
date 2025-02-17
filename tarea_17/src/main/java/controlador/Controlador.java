@@ -8,13 +8,11 @@ public class Controlador {
 
 	
 	public void ejecutar (AlumnosDAO modelo, IVista vista) {
-		//TODO
 		
 		// Inicializar los logs
 		InicializarLogs.inicializarLogs();
 
 		// Llamar a la vista que contiene el menú principal en consola
 		vista.mostrarMenu(modelo);
-
 	}
 }
