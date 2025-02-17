@@ -6,9 +6,8 @@ import vista.IVista;
 
 public class Controlador {
 
-	
-	public void ejecutar (AlumnosDAO modelo, IVista vista) {
-		
+	public void ejecutar(AlumnosDAO modelo, IVista vista) {
+
 		// Inicializar los logs
 		InicializarLogs.inicializarLogs();
 

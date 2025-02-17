@@ -2,7 +2,6 @@ package ejecutadores;
 
 import controlador.Controlador;
 
-
 //import modelo.AlumnosBD;
 import modelo.AlumnosDAO;
 //import modelo.AlumnosFicheroXML;
@@ -16,6 +15,5 @@ public class Ejecutador4 {
 		AlumnosDAO modelo = new AlumnosHibernate();
 		IVista vista = new VistaConsola();
 		new Controlador().ejecutar(modelo, vista);
-		
 	}
 }
