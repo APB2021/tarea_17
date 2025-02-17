@@ -41,4 +41,7 @@ public interface IVista {
 
 	// case 13:
 	public void cambiarGrupoAlumno(AlumnosDAO modelo);
+
+	// case 14:
+	public void guardarGrupoEspecificoEnXML(AlumnosDAO modelo);
 }

@@ -7,26 +7,22 @@
     <session-factory>
         <!-- Configuración de la base de datos -->
         <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/Alumnos24_Hibernate?serverTimezone=UTC</property>
-        <property name="hibernate.connection.username">tu_usuario</property>
-        <property name="hibernate.connection.password">tu_contraseña</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/Alumnos24_Hibernate?serverTimezone=UTC&useSSL=false</property>
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.connection.password">root</property>
 
-        <!-- Dialecto de Hibernate para MySQL -->
-        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
-
-        <!-- Pool de conexiones con HikariCP -->
-        <property name="hibernate.hikari.maximumPoolSize">10</property>
-        <property name="hibernate.hikari.minimumIdle">2</property>
+        <!-- Dialecto de Hibernate para MySQL 8 -->
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQL8Dialect</property>
 
         <!-- Mostrar las consultas SQL en consola -->
         <property name="hibernate.show_sql">true</property>
         <property name="hibernate.format_sql">true</property>
 
-        <!-- Opcional: Crear tablas automáticamente (mejor evitar en producción) -->
+        <!-- Opcional: Crear tablas automáticamente (solo para desarrollo) -->
         <property name="hibernate.hbm2ddl.auto">update</property>
 
         <!-- Mapeo de clases -->
-        <mapping class="com.tarea17.modelo.Alumno" />
-        <mapping class="com.tarea17.modelo.Grupo" />
+        <mapping class="modelo.Alumno" />
+        <mapping class="modelo.Grupo" />
     </session-factory>
 </hibernate-configuration>
