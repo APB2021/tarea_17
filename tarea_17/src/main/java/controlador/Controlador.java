@@ -17,7 +17,4 @@ public class Controlador {
 		vista.mostrarMenu(modelo);
 
 	}
-	
 }
-
-
