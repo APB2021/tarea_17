@@ -27,15 +27,15 @@ public class Alumno implements Serializable {
 	private String nombre;
 	private String apellidos;
 	private char genero = 'S';
-	
-	 @Temporal(TemporalType.DATE)
+
+	@Temporal(TemporalType.DATE)
 	private Date fechaNacimiento;
 
-	 private String ciclo;
+	private String ciclo;
 	private String curso;
 
 	@ManyToOne
-    @JoinColumn(name = "numeroGrupo")  // Ajusta al nombre correcto de la FK en la BD
+	@JoinColumn(name = "numeroGrupo", nullable = false)
 	private Grupo grupo;
 
 	// Constructores de la clase Alumno:

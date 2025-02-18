@@ -139,16 +139,11 @@ public class VistaConsola implements IVista {
 		// Crear objeto Grupo
 		Grupo grupo = new Grupo(nombreGrupo);
 
-		// Intentamos insertar el nuevo grupo utilizando try-with-resources
-		try (Connection conexionBD = PoolConexiones.getConnection()) {
-			// Llamamos al método del DAO para insertar el grupo
-			if (modelo.insertarGrupo(grupo)) {
-				System.out.println("Grupo insertado correctamente.");
-			} else {
-				System.out.println("Error al insertar el grupo.");
-			}
-		} catch (Exception e) {
-			System.out.println("Ocurrió un error al insertar el grupo: " + e.getMessage());
+		// Llamamos al método del DAO para insertar el grupo
+		if (modelo.insertarGrupo(grupo)) {
+			System.out.println("Grupo insertado correctamente.");
+		} else {
+			System.out.println("Error al insertar el grupo.");
 		}
 	}
 

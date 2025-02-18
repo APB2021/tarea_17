@@ -65,6 +65,24 @@ public class AlumnosHibernate implements AlumnosDAO {
 	}
 
 	@Override
+	public boolean insertarGrupo(Grupo grupo) {
+		Transaction tx = null;
+		try (Session session = getSession()) {
+			tx = session.beginTransaction();
+			session.persist(grupo); // Guardar el grupo en la base de datos
+			tx.commit();
+			System.out.println("✅ Grupo insertado correctamente en Hibernate.");
+			return true;
+		} catch (Exception e) {
+			if (tx != null)
+				tx.rollback();
+			System.out.println("❌ Error al insertar el grupo: " + e.getMessage());
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	@Override
 	public boolean mostrarTodosLosAlumnos(boolean mostrarTodaLaInformacion) {
 		try (Session session = getSession()) {
 			List<Alumno> alumnos = session.createQuery("FROM Alumno", Alumno.class).getResultList();
@@ -198,12 +216,6 @@ public class AlumnosHibernate implements AlumnosDAO {
 
 	@Override
 	public boolean leerAlumnosDeFicheroJSON() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean insertarGrupo(Grupo grupo) {
 		// TODO Auto-generated method stub
 		return false;
 	}

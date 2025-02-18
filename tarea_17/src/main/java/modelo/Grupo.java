@@ -3,10 +3,14 @@ package modelo;
 import java.io.Serializable;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -15,12 +19,16 @@ import jakarta.persistence.Table;
 public class Grupo implements Serializable {
 
 	private static final long serialVersionUID = 1074847470373142375L;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // El numeroGrupo es autoincremental
+	@Column(name = "numeroGrupo")
 	private int numeroGrupo; // Este campo será asignado por la base de datos
-	
+
+	@Column(name = "nombreGrupo", nullable = false, unique = true)
 	private String nombreGrupo;
+
+	@OneToMany(mappedBy = "grupo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Alumno> alumnos;
 
 	// Constructor vacío:
