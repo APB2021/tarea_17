@@ -168,17 +168,10 @@ public class VistaConsola implements IVista {
 
 	public void guardarAlumnosEnFicheroTexto(AlumnosDAO modelo) {
 		try {
-			// Recuperamos todos los alumnos
-			Connection conexionBD = PoolConexiones.getConnection();
-
-			// Llamamos al método que guarda los alumnos en el fichero de texto sin esperar
-			// un valor booleano
 			modelo.guardarAlumnosEnFicheroTexto();
-
-			System.out.println("Alumnos guardados correctamente en el archivo de texto.");
-
+			System.out.println("✅ Alumnos guardados correctamente en el archivo de texto.");
 		} catch (Exception e) {
-			System.out.println("Ocurrió un error al guardar los alumnos en el archivo de texto: " + e.getMessage());
+			System.out.println("❌ Ocurrió un error al guardar los alumnos en el archivo de texto: " + e.getMessage());
 		}
 	}
 

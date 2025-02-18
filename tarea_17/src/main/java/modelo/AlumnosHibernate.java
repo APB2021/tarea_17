@@ -1,5 +1,8 @@
 package modelo;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -84,39 +87,83 @@ public class AlumnosHibernate implements AlumnosDAO {
 
 	@Override
 	public boolean mostrarTodosLosAlumnos(boolean mostrarTodaLaInformacion) {
-	    try (Session session = getSession()) {
+		try (Session session = getSession()) {
+			List<Alumno> alumnos = session.createQuery("FROM Alumno", Alumno.class).getResultList();
+
+			if (alumnos.isEmpty()) {
+				System.out.println("No hay alumnos registrados.");
+				return false;
+			}
+
+			for (Alumno alumno : alumnos) {
+				if (mostrarTodaLaInformacion) {
+					System.out.printf("""
+							-------------------------
+							NIA: %d
+							Nombre: %s
+							Apellidos: %s
+							Género: %s
+							Fecha de nacimiento: %s
+							Ciclo: %s
+							Curso: %s
+							Grupo: %s
+							""", alumno.getNia(), alumno.getNombre(), alumno.getApellidos(), alumno.getGenero(),
+							new SimpleDateFormat("dd-MM-yyyy").format(alumno.getFechaNacimiento()), alumno.getCiclo(),
+							alumno.getCurso(),
+							(alumno.getGrupo() != null ? alumno.getGrupo().getNombreGrupo() : "Sin grupo"));
+				} else {
+					System.out.printf("NIA: %d, Nombre: %s%n", alumno.getNia(), alumno.getNombre());
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	@Override
+	public void guardarAlumnosEnFicheroTexto() {
+	    String nombreArchivo = "alumnos.txt";
+
+	    try (Session session = getSession();
+	         BufferedWriter writer = new BufferedWriter(new FileWriter(nombreArchivo))) {
+
+	        // Obtener todos los alumnos
 	        List<Alumno> alumnos = session.createQuery("FROM Alumno", Alumno.class).getResultList();
 
 	        if (alumnos.isEmpty()) {
-	            System.out.println("No hay alumnos registrados.");
-	            return false;
+	            System.out.println("No hay alumnos para guardar en el archivo.");
+	            return;
 	        }
 
+	        // Escribir la cabecera del archivo
+	        writer.write("NIA,Nombre,Apellidos,Género,Fecha Nacimiento,Ciclo,Curso,Nombre del Grupo");
+	        writer.newLine();
+
+	        // Escribir cada alumno en el archivo
+	        SimpleDateFormat formatoFecha = new SimpleDateFormat("dd-MM-yyyy");
 	        for (Alumno alumno : alumnos) {
-	            if (mostrarTodaLaInformacion) {
-	                System.out.printf("""
-	                        -------------------------
-	                        NIA: %d
-	                        Nombre: %s
-	                        Apellidos: %s
-	                        Género: %s
-	                        Fecha de nacimiento: %s
-	                        Ciclo: %s
-	                        Curso: %s
-	                        Grupo: %s
-	                        """,
-	                        alumno.getNia(), alumno.getNombre(), alumno.getApellidos(), alumno.getGenero(),
-	                        new SimpleDateFormat("dd-MM-yyyy").format(alumno.getFechaNacimiento()),
-	                        alumno.getCiclo(), alumno.getCurso(),
-	                        (alumno.getGrupo() != null ? alumno.getGrupo().getNombreGrupo() : "Sin grupo"));
-	            } else {
-	                System.out.printf("NIA: %d, Nombre: %s%n", alumno.getNia(), alumno.getNombre());
-	            }
+	            String linea = String.format("%d,%s,%s,%s,%s,%s,%s,%s",
+	                    alumno.getNia(),
+	                    alumno.getNombre(),
+	                    alumno.getApellidos(),
+	                    alumno.getGenero(),
+	                    formatoFecha.format(alumno.getFechaNacimiento()),
+	                    alumno.getCiclo(),
+	                    alumno.getCurso(),
+	                    (alumno.getGrupo() != null ? alumno.getGrupo().getNombreGrupo() : "Sin grupo"));
+
+	            writer.write(linea);
+	            writer.newLine();
 	        }
-	        return true;
+
+	        System.out.println("✅ Alumnos guardados correctamente en " + nombreArchivo);
+
+	    } catch (IOException e) {
+	        System.out.println("❌ Error al guardar los alumnos en el archivo: " + e.getMessage());
 	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return false;
+	        System.out.println("❌ Error inesperado: " + e.getMessage());
 	    }
 	}
 
@@ -219,12 +266,6 @@ public class AlumnosHibernate implements AlumnosDAO {
 	public boolean eliminarAlumnosPorApellidos(String apellidos) {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	@Override
-	public void guardarAlumnosEnFicheroTexto() {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
