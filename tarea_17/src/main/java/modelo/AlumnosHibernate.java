@@ -84,17 +84,42 @@ public class AlumnosHibernate implements AlumnosDAO {
 
 	@Override
 	public boolean mostrarTodosLosAlumnos(boolean mostrarTodaLaInformacion) {
-		try (Session session = getSession()) {
-			List<Alumno> alumnos = session.createQuery("FROM Alumno", Alumno.class).getResultList();
-			for (Alumno alumno : alumnos) {
-				System.out.println(alumno);
-			}
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
+	    try (Session session = getSession()) {
+	        List<Alumno> alumnos = session.createQuery("FROM Alumno", Alumno.class).getResultList();
+
+	        if (alumnos.isEmpty()) {
+	            System.out.println("No hay alumnos registrados.");
+	            return false;
+	        }
+
+	        for (Alumno alumno : alumnos) {
+	            if (mostrarTodaLaInformacion) {
+	                System.out.printf("""
+	                        -------------------------
+	                        NIA: %d
+	                        Nombre: %s
+	                        Apellidos: %s
+	                        Género: %s
+	                        Fecha de nacimiento: %s
+	                        Ciclo: %s
+	                        Curso: %s
+	                        Grupo: %s
+	                        """,
+	                        alumno.getNia(), alumno.getNombre(), alumno.getApellidos(), alumno.getGenero(),
+	                        new SimpleDateFormat("dd-MM-yyyy").format(alumno.getFechaNacimiento()),
+	                        alumno.getCiclo(), alumno.getCurso(),
+	                        (alumno.getGrupo() != null ? alumno.getGrupo().getNombreGrupo() : "Sin grupo"));
+	            } else {
+	                System.out.printf("NIA: %d, Nombre: %s%n", alumno.getNia(), alumno.getNombre());
+	            }
+	        }
+	        return true;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return false;
+	    }
 	}
+
 
 	@Override
 	public boolean modificarNombreAlumnoPorNIA(int nia, String nuevoNombre) {
