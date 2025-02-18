@@ -1,28 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE hibernate-configuration PUBLIC  
-    "-//Hibernate/Hibernate Configuration DTD 3.0//EN"  
-    "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 
 <hibernate-configuration>
-    <session-factory>
-        <!-- Configuración de la base de datos -->
-        <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/Alumnos24_Hibernate?serverTimezone=UTC&useSSL=false</property>
-        <property name="hibernate.connection.username">root</property>
-        <property name="hibernate.connection.password">root</property>
+	<session-factory>
+		<!-- Configuración de la base de datos -->
+		<property name="hibernate.connection.driver_class">
+			com.mysql.cj.jdbc.Driver</property>
+		<property name="hibernate.connection.url">
+			jdbc:mysql://localhost:3306/Alumnos24_Hibernate?serverTimezone=UTC&amp;useSSL=false
+		</property>
 
-        <!-- Dialecto de Hibernate para MySQL 8 -->
-        <property name="hibernate.dialect">org.hibernate.dialect.MySQL8Dialect</property>
+		<property name="hibernate.connection.username">root</property>
+		<property name="hibernate.connection.password">root</property>
 
-        <!-- Mostrar las consultas SQL en consola -->
-        <property name="hibernate.show_sql">true</property>
-        <property name="hibernate.format_sql">true</property>
+		<!-- Dialecto de Hibernate desde Hibernate 6 -->
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
 
-        <!-- Opcional: Crear tablas automáticamente (solo para desarrollo) -->
-        <property name="hibernate.hbm2ddl.auto">update</property>
+		<!-- Configuración del pool de conexiones -->
+		<property name="hibernate.connection.pool_size">10</property>
 
-        <!-- Mapeo de clases -->
-        <mapping class="modelo.Alumno" />
-        <mapping class="modelo.Grupo" />
-    </session-factory>
+		<!-- Manejo de sesiones -->
+		<property name="hibernate.current_session_context_class">thread</property>
+
+		<!-- Mostrar las consultas SQL en consola -->
+		<property name="hibernate.show_sql">true</property>
+		<property name="hibernate.format_sql">true</property>
+
+		<!-- Opcional: Crear tablas automáticamente (solo para desarrollo) -->
+		<!-- <property name="hibernate.hbm2ddl.auto">update</property> -->
+		<property name="hibernate.hbm2ddl.auto">update</property>
+
+		<!-- Escaneo automático de entidades en el paquete 'modelo' -->
+		<!-- <property name="hibernate.archive.autodetection">class</property> -->
+
+		<mapping class="modelo.Alumno" />
+
+		<mapping class="modelo.Grupo" />
+
+
+	</session-factory>
 </hibernate-configuration>

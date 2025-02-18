@@ -3,20 +3,39 @@ package modelo;
 import java.io.Serializable;
 import java.util.Date;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+
+@Entity
+@Table(name = "alumnos")
+
 public class Alumno implements Serializable {
 
 	private static final long serialVersionUID = -1773328651409080184L;
 
-	// Atributos privados de la clase Alumno:
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY) // El nia es autoincremental
 
 	private int nia = 0;
 	private String nombre;
 	private String apellidos;
 	private char genero = 'S';
+	
+	 @Temporal(TemporalType.DATE)
 	private Date fechaNacimiento;
-	private String ciclo;
+
+	 private String ciclo;
 	private String curso;
-	// cambiamos el tipo de "grupo" desde String a la clase Grupo:
+
+	@ManyToOne
+    @JoinColumn(name = "numeroGrupo")  // Ajusta al nombre correcto de la FK en la BD
 	private Grupo grupo;
 
 	// Constructores de la clase Alumno:

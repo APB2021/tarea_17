@@ -3,10 +3,23 @@ package modelo;
 import java.io.Serializable;
 import java.util.List;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "grupos")
+
 public class Grupo implements Serializable {
 
 	private static final long serialVersionUID = 1074847470373142375L;
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY) // El numeroGrupo es autoincremental
 	private int numeroGrupo; // Este campo será asignado por la base de datos
+	
 	private String nombreGrupo;
 	private List<Alumno> alumnos;
 
@@ -42,12 +55,12 @@ public class Grupo implements Serializable {
 	public void setNombreGrupo(String nombreGrupo) {
 		this.nombreGrupo = nombreGrupo;
 	}
-	
-	public List<Alumno> getAlumnos() {
-        return alumnos;
-    }
 
-    public void setAlumnos(List<Alumno> alumnos) {
-        this.alumnos = alumnos;
-    }
+	public List<Alumno> getAlumnos() {
+		return alumnos;
+	}
+
+	public void setAlumnos(List<Alumno> alumnos) {
+		this.alumnos = alumnos;
+	}
 }

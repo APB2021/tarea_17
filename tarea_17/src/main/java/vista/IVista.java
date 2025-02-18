@@ -13,28 +13,28 @@ public interface IVista {
 	public void insertarNuevoGrupo(AlumnosDAO modelo);
 
 	// cases 3 y 12:
-	public void mostrarTodosLosAlumnos(boolean mostrarTodaLaInformacion);
+	public void mostrarTodosLosAlumnos(AlumnosDAO modelo, boolean mostrarTodaLaInformacion);
 
 	// case 4:
-	public void guardarAlumnosEnFicheroTexto();
+	public void guardarAlumnosEnFicheroTexto(AlumnosDAO modelo);
 
 	// case 5:
-	public void leerAlumnosDesdeFichero();
+	public void leerAlumnosDesdeFichero(AlumnosDAO modelo);
 
 	// case 6:
-	public void modificarNombreAlumnoPorNia();
+	public void modificarNombreAlumnoPorNia(AlumnosDAO modelo);
 
 	// case 7:
-	public void eliminarAlumnoPorNIA();
+	public void eliminarAlumnoPorNIA(AlumnosDAO modelo);
 
 	// case 8:
-	public void eliminarAlumnosPorGrupo();
+	public void eliminarAlumnosPorGrupo(AlumnosDAO modelo);
 
 	// case 9:
-	public void guardarGruposEnXML();
+	public void guardarGruposEnXML(AlumnosDAO modelo);
 
 	// case 10:
-	public void leerYGuardarGruposXML();
+	public void leerYGuardarGruposXML(AlumnosDAO modelo);
 
 	// case 11:
 	public void mostrarAlumnosPorGrupo(AlumnosDAO modelo);

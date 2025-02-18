@@ -11,26 +11,10 @@ import modelo.AlumnosDAO;
 import modelo.Grupo;
 import pool.PoolConexiones;
 
-/**
- * Esta clase se encarga de gestionar el menú principal de la aplicación.
- * Contiene las opciones para interactuar con los grupos y los alumnos.
- */
-
 public class VistaConsola implements IVista {
 
 	private final Scanner sc = new Scanner(System.in); // Scanner para la entrada de datos
-	private final AlumnosDAO alumnosDao = new AlumnosBD(); // Gestor para alumnos y grupos
 
-	/**
-	 * Muestra el menú principal y permite seleccionar una opción. Permite al
-	 * usuario seleccionar opciones como insertar alumnos, grupos, mostrar todos los
-	 * alumnos y guardar los datos de los alumnos en un archivo de texto.
-	 */
-
-	/**
-	 * Clase encargada de mostrar el menú principal y gestionar las interacciones
-	 * con el usuario para operar con alumnos y grupos.
-	 */
 	public void mostrarMenu(AlumnosDAO modelo) {
 		int opcion;
 		do {
@@ -48,9 +32,6 @@ public class VistaConsola implements IVista {
 		} while (opcion != 0);
 	}
 
-	/**
-	 * Imprime las opciones disponibles en el menú principal.
-	 */
 	private void imprimirMenu() {
 
 		String textoMenu = """
@@ -88,17 +69,18 @@ public class VistaConsola implements IVista {
 
 		case 1 -> insertarNuevoAlumno(modelo);
 		case 2 -> insertarNuevoGrupo(modelo);
-		case 3 -> mostrarTodosLosAlumnos(true); // Mostrará toda la información de todos los alumnos
-		case 4 -> guardarAlumnosEnFicheroTexto();
-		case 5 -> leerAlumnosDesdeFichero();
-		case 6 -> modificarNombreAlumnoPorNia();
-		case 7 -> eliminarAlumnoPorNIA();
-		case 8 -> eliminarAlumnosPorGrupo();
-		case 9 -> guardarGruposEnXML();
-		case 10 -> leerYGuardarGruposXML();
+		case 3 -> mostrarTodosLosAlumnos(modelo, true); // Mostrará toda la información de todos los alumnos
+		case 4 -> guardarAlumnosEnFicheroTexto(modelo);
+		case 5 -> leerAlumnosDesdeFichero(modelo);
+		case 6 -> modificarNombreAlumnoPorNia(modelo);
+		case 7 -> eliminarAlumnoPorNIA(modelo);
+		case 8 -> eliminarAlumnosPorGrupo(modelo);
+		case 9 -> guardarGruposEnXML(modelo);
+		case 10 -> leerYGuardarGruposXML(modelo);
 		// Tarea 16:
 		case 11 -> mostrarAlumnosPorGrupo(modelo);
-		case 12 -> mostrarTodosLosAlumnos(false); // Mostrará, inicilamente, el nia y el nombre de todos los alumnos
+		case 12 -> mostrarTodosLosAlumnos(modelo, false); // Mostrará, inicialmente, el nia y el nombre de todos los
+															// alumnos
 		case 13 -> cambiarGrupoAlumno(modelo);
 		case 14 -> guardarGrupoEspecificoEnXML(modelo);
 		case 0 -> System.out.println("Saliendo del programa...");
@@ -114,28 +96,22 @@ public class VistaConsola implements IVista {
 	 */
 
 	public void insertarNuevoAlumno(AlumnosDAO modelo) {
-		try { // Solicitar datos del alumno al usuario
-
+		try {
 			Alumno alumno = modelo.solicitarDatosAlumno();
-
-			// Uso de try-with-resources para manejar automáticamente la conexión
-			try (Connection conexionBD = PoolConexiones.getConnection()) { // Insertar el alumno en la base de datos
-				if (alumnosDao.insertarAlumno(alumno)) {
-					System.out.println("Alumno insertado correctamente.");
-				} else {
-					System.out.println("Error al insertar el alumno.");
-				}
+			if (alumno == null) {
+				System.out.println("❌ Error: El objeto Alumno es null.");
+				return;
+			}
+			if (modelo.insertarAlumno(alumno)) {
+				System.out.println("✅ Alumno insertado correctamente.");
+			} else {
+				System.out.println("❌ Error al insertar el alumno.");
 			}
 		} catch (Exception e) {
-			System.out.println("Ocurrió un error al insertar el alumno: " + e.getMessage());
+			System.out.println("❌ Ocurrió un error al insertar el alumno: " + e.getMessage());
 			e.printStackTrace();
-		} // Para registrar el stack trace en caso de errores inesperados } }
+		}
 	}
-
-	/*
-	 * public void insertarNuevoAlumno(AlumnosDAO modelo) { Alumno alumno =
-	 * modelo.solicitarDatosAlumno(); alumnosDao.insertarAlumno(alumno); }
-	 */
 
 	/**
 	 * Permite insertar un nuevo grupo solicitando los datos al usuario y
@@ -176,9 +152,9 @@ public class VistaConsola implements IVista {
 		}
 	}
 
-	public void mostrarTodosLosAlumnos(boolean mostrarTodaLaInformación) {
+	public void mostrarTodosLosAlumnos(AlumnosDAO modelo, boolean mostrarTodaLaInformación) {
 		try (Connection conexionBD = PoolConexiones.getConnection()) {
-			if (alumnosDao.mostrarTodosLosAlumnos(mostrarTodaLaInformación)) {
+			if (modelo.mostrarTodosLosAlumnos(mostrarTodaLaInformación)) {
 				System.out.println("Los alumnos se han mostrado correctamente.");
 			} else {
 				System.out.println("No se pudieron mostrar los alumnos.");
@@ -195,14 +171,14 @@ public class VistaConsola implements IVista {
 	 * fecha de nacimiento, ciclo, curso y nombre del grupo.
 	 */
 
-	public void guardarAlumnosEnFicheroTexto() {
+	public void guardarAlumnosEnFicheroTexto(AlumnosDAO modelo) {
 		try {
 			// Recuperamos todos los alumnos
 			Connection conexionBD = PoolConexiones.getConnection();
 
 			// Llamamos al método que guarda los alumnos en el fichero de texto sin esperar
 			// un valor booleano
-			alumnosDao.guardarAlumnosEnFicheroTexto();
+			modelo.guardarAlumnosEnFicheroTexto();
 
 			System.out.println("Alumnos guardados correctamente en el archivo de texto.");
 
@@ -216,11 +192,11 @@ public class VistaConsola implements IVista {
 	 * base de datos.
 	 */
 
-	public void leerAlumnosDesdeFichero() {
+	public void leerAlumnosDesdeFichero(AlumnosDAO modelo) {
 		try {
 			Connection conexionBD = PoolConexiones.getConnection();
 
-			if (alumnosDao.leerAlumnosDeFicheroTexto()) {
+			if (modelo.leerAlumnosDeFicheroTexto()) {
 				System.out.println("Alumnos leídos e insertados correctamente desde el fichero 'alumnos.txt'.");
 			} else {
 				System.out.println("Ocurrió un error al procesar el fichero.");
@@ -237,7 +213,7 @@ public class VistaConsola implements IVista {
 	 * nombre.
 	 */
 
-	public void modificarNombreAlumnoPorNia() {
+	public void modificarNombreAlumnoPorNia(AlumnosDAO modelo) {
 		try {
 			// Solicitar al usuario el NIA del alumno
 			System.out.print("Introduce el NIA del alumno cuyo nombre quieres modificar: ");
@@ -257,7 +233,7 @@ public class VistaConsola implements IVista {
 			// Usar try-with-resources para gestionar la conexión a la base de datos
 			try (Connection conexionBD = PoolConexiones.getConnection()) {
 				// Llamar al método del gestor para modificar el nombre
-				if (alumnosDao.modificarNombreAlumnoPorNIA(nia, nuevoNombre)) {
+				if (modelo.modificarNombreAlumnoPorNIA(nia, nuevoNombre)) {
 					System.out.println("Nombre del alumno modificado correctamente.");
 				} else {
 					System.out.println("No se pudo modificar el nombre del alumno. Verifica el NIA.");
@@ -272,7 +248,7 @@ public class VistaConsola implements IVista {
 	 * Permite eliminar un alumno de la base de datos a partir de su NIA (PK).
 	 */
 
-	public void eliminarAlumnoPorNIA() {
+	public void eliminarAlumnoPorNIA(AlumnosDAO modelo) {
 		try {
 			// Solicitar NIA al usuario
 			System.out.println("Introduce el NIA del alumno a eliminar:");
@@ -282,7 +258,7 @@ public class VistaConsola implements IVista {
 			// Usar try-with-resources para manejar la conexión a la base de datos
 			try (Connection conexionBD = PoolConexiones.getConnection()) {
 				// Intentar eliminar el alumno
-				if (alumnosDao.eliminarAlumnoPorNIA(nia)) {
+				if (modelo.eliminarAlumnoPorNIA(nia)) {
 					System.out.println("Alumno eliminado correctamente.");
 				} else {
 					System.out.println("No se encontró un alumno con el NIA proporcionado.");
@@ -300,27 +276,17 @@ public class VistaConsola implements IVista {
 	 * todos los alumnos que pertenezcan al grupo seleccionado.
 	 */
 
-	public void eliminarAlumnosPorGrupo() {
+	public void eliminarAlumnosPorGrupo(AlumnosDAO modelo) {
 		try (Connection conexionBD = PoolConexiones.getConnection()) {
 			// Mostramos los grupos disponibles
 			System.out.println("Grupos disponibles:");
+
 			try {
-				try {
-					try {
-						if (!AlumnosBD.mostrarTodosLosGrupos()) {
-							System.out.println("No hay grupos registrados.");
-							return;
-						}
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				if (!AlumnosBD.mostrarTodosLosGrupos()) {
+					System.out.println("No hay grupos registrados.");
+					return;
 				}
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -339,7 +305,7 @@ public class VistaConsola implements IVista {
 			}
 
 			// Llamamos al gestor para realizar la operación
-			if (alumnosDao.eliminarAlumnosPorGrupo(nombreGrupo)) {
+			if (modelo.eliminarAlumnosPorGrupo(nombreGrupo)) {
 				System.out.println("Alumnos del grupo " + nombreGrupo + " eliminados correctamente.");
 			} else {
 				System.out.println(
@@ -356,12 +322,12 @@ public class VistaConsola implements IVista {
 	 * conexiones.
 	 */
 
-	public void guardarGruposEnXML() {
+	public void guardarGruposEnXML(AlumnosDAO modelo) {
 		// Usamos try-with-resources para gestionar automáticamente el cierre de la
 		// conexión
 		try (Connection conexionBD = PoolConexiones.getConnection()) {
 			// Llamamos al método de GestorGrupos para guardar los grupos en el archivo XML
-			if (alumnosDao.guardarGruposEnXML()) {
+			if (modelo.guardarGruposEnXML()) {
 				// Si el proceso es exitoso, mostramos un mensaje de éxito
 				System.out.println("Archivo XML guardado correctamente.");
 			} else {
@@ -380,7 +346,7 @@ public class VistaConsola implements IVista {
 	 * se muestra un mensaje de error.
 	 */
 
-	public void leerYGuardarGruposXML() {
+	public void leerYGuardarGruposXML(AlumnosDAO modelo) {
 		// Ruta fija del archivo XML de grupos
 		String rutaArchivo = "grupos.xml";
 
@@ -394,7 +360,7 @@ public class VistaConsola implements IVista {
 		// Usamos try-with-resources para manejar la conexión
 		try (Connection conexionBD = PoolConexiones.getConnection()) {
 			// Llamamos al método de GestorGrupos para leer los grupos en el archivo XML
-			if (alumnosDao.leerYGuardarGruposXML(rutaArchivo)) {
+			if (modelo.leerYGuardarGruposXML(rutaArchivo)) {
 				// Si el proceso es exitoso, mostramos un mensaje de éxito
 				System.out.println("Archivo XML leído correctamente y datos guardados en la base de datos.");
 			} else {
