@@ -343,6 +343,65 @@ public class AlumnosHibernate implements AlumnosDAO {
 		}
 	}
 
+	// 8. Eliminar los alumnos del grupo indicado.
+
+	@Override
+	public boolean eliminarAlumnosPorGrupo(String nombreGrupo) {
+	    Transaction tx = null;
+	    try (Session session = getSession()) {
+	        tx = session.beginTransaction();
+
+	        // Obtener el grupo por su nombre
+	        Grupo grupo = session.createQuery("FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
+	                             .setParameter("nombreGrupo", nombreGrupo)
+	                             .uniqueResult();
+
+	        if (grupo == null) {
+	            System.out.println("❌ El grupo '" + nombreGrupo + "' no existe.");
+	            return false;
+	        }
+
+	        // Eliminar los alumnos del grupo
+	        int eliminados = session.createQuery("DELETE FROM Alumno WHERE grupo = :grupo")
+	                                .setParameter("grupo", grupo)
+	                                .executeUpdate();
+
+	        tx.commit();
+	        System.out.println("✅ Se han eliminado " + eliminados + " alumnos del grupo '" + nombreGrupo + "'.");
+	        return eliminados > 0;
+	    } catch (Exception e) {
+	        if (tx != null) tx.rollback();
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
+	
+	@Override
+	public boolean mostrarTodosLosGrupos() {
+	    try (Session session = getSession()) {
+	        List<String> nombresGrupos = session.createQuery("SELECT g.nombreGrupo FROM Grupo g", String.class)
+	                                            .getResultList();
+
+	        if (nombresGrupos.isEmpty()) {
+	            System.out.println("❌ No se encontraron grupos en la base de datos.");
+	            return false;
+	        }
+
+	        System.out.println("📌 Grupos disponibles:");
+	        for (String nombre : nombresGrupos) {
+	            System.out.println("- " + nombre);
+	        }
+
+	        return true;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        System.out.println("❌ Error al mostrar los grupos: " + e.getMessage());
+	        return false;
+	    }
+	}
+
+
+
 	@Override
 	public boolean mostrarAlumnoPorNIA(int nia) {
 		// TODO Auto-generated method stub
@@ -363,12 +422,6 @@ public class AlumnosHibernate implements AlumnosDAO {
 
 	@Override
 	public boolean leerAlumnosDeFicheroJSON() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean eliminarAlumnosPorGrupo(String grupo) {
 		// TODO Auto-generated method stub
 		return false;
 	}

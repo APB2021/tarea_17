@@ -122,5 +122,11 @@ public class AlumnosFicheroXML implements AlumnosDAO{
 		return false;
 	}
 
+	@Override
+	public boolean mostrarTodosLosGrupos() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	
 }

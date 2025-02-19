@@ -77,7 +77,6 @@ public class VistaConsola implements IVista {
 		case 8 -> eliminarAlumnosPorGrupo(modelo);
 		case 9 -> guardarGruposEnXML(modelo);
 		case 10 -> leerYGuardarGruposXML(modelo);
-		// Tarea 16:
 		case 11 -> mostrarAlumnosPorGrupo(modelo);
 		case 12 -> mostrarTodosLosAlumnos(modelo, false); // Mostrará, inicialmente, el nia y el nombre de todos los
 															// alumnos
@@ -89,8 +88,8 @@ public class VistaConsola implements IVista {
 	}
 
 	/**
-	 * Permite insertar un nuevo alumno solicitando los datos al usuario y
-	 * almacenándolos en la base de datos.
+	 * Inserta un nuevo alumno solicitando los datos al usuario y almacenándolos en
+	 * la base de datos.
 	 * 
 	 * @param modelo el objeto DAO para gestionar las operaciones de alumnos.
 	 */
@@ -114,8 +113,8 @@ public class VistaConsola implements IVista {
 	}
 
 	/**
-	 * Permite insertar un nuevo grupo solicitando los datos al usuario y
-	 * almacenándolos en la base de datos.
+	 * Inserta un nuevo grupo solicitando los datos al usuario y almacenándolos en
+	 * la base de datos.
 	 *
 	 * @param modelo el DAO que permite interactuar con la base de datos.
 	 */
@@ -146,6 +145,14 @@ public class VistaConsola implements IVista {
 			System.out.println("Error al insertar el grupo.");
 		}
 	}
+
+	/**
+	 * Muestra todos los alumnos en la BD
+	 * 
+	 * @param modelo                    el DAO que permite interactuar con la base
+	 *                                  de datos.
+	 * @param mostrarTodaLaInformación.
+	 */
 
 	public void mostrarTodosLosAlumnos(AlumnosDAO modelo, boolean mostrarTodaLaInformación) {
 		try {
@@ -195,57 +202,52 @@ public class VistaConsola implements IVista {
 	 * Permite eliminar un alumno de la base de datos a partir de su NIA (PK).
 	 */
 	public void eliminarAlumnoPorNIA(AlumnosDAO modelo) {
-	    try {
-	        // Solicitar NIA al usuario
-	        System.out.println("Introduce el NIA del alumno a eliminar:");
-	        int nia = sc.nextInt();
-	        sc.nextLine(); // Limpiar buffer
-
-	        // Llamar directamente al DAO sin abrir la conexión
-	        if (modelo.eliminarAlumnoPorNIA(nia)) {
-	            System.out.println("✅ Alumno eliminado correctamente.");
-	        } else {
-	            System.out.println("❌ No se encontró un alumno con el NIA proporcionado.");
-	        }
-	    } catch (Exception e) {
-	        System.out.println("❌ Ocurrió un error al intentar eliminar el alumno: " + e.getMessage());
-	    }
-	}
-
-	/**
-	 * Permite modificar el nombre de un alumno solicitando su NIA y el nuevo
-	 * nombre.
-	 */
-
-	public void modificarNombreAlumnoPorNia(AlumnosDAO modelo) {
 		try {
-			// Solicitar al usuario el NIA del alumno
-			System.out.print("Introduce el NIA del alumno cuyo nombre quieres modificar: ");
+			// Solicitar NIA al usuario
+			System.out.println("Introduce el NIA del alumno a eliminar:");
 			int nia = sc.nextInt();
 			sc.nextLine(); // Limpiar buffer
 
-			// Solicitar el nuevo nombre del alumno
-			System.out.print("Introduce el nuevo nombre para el alumno: ");
-			String nuevoNombre = sc.nextLine().trim().toUpperCase();
-
-			// Validar que el nombre no esté vacío
-			if (nuevoNombre.isEmpty()) {
-				System.out.println("El nombre no puede estar vacío.");
-				return;
+			// Llamar directamente al DAO sin abrir la conexión
+			if (modelo.eliminarAlumnoPorNIA(nia)) {
+				System.out.println("✅ Alumno eliminado correctamente.");
+			} else {
+				System.out.println("❌ No se encontró un alumno con el NIA proporcionado.");
 			}
-
-			// Usar try-with-resources para gestionar la conexión a la base de datos
-			try (Connection conexionBD = PoolConexiones.getConnection()) {
-				// Llamar al método del gestor para modificar el nombre
-				if (modelo.modificarNombreAlumnoPorNIA(nia, nuevoNombre)) {
-					System.out.println("Nombre del alumno modificado correctamente.");
-				} else {
-					System.out.println("No se pudo modificar el nombre del alumno. Verifica el NIA.");
-				}
-			} // La conexión se cierra automáticamente aquí
 		} catch (Exception e) {
-			System.out.println("Ocurrió un error al modificar el nombre del alumno: " + e.getMessage());
+			System.out.println("❌ Ocurrió un error al intentar eliminar el alumno: " + e.getMessage());
 		}
+	}
+
+	/**
+	 * Permite modificar el nombre de un alumno solicitando su NIA y el nuevo nombre.
+	 */
+	public void modificarNombreAlumnoPorNia(AlumnosDAO modelo) {
+	    try {
+	        // Solicitar al usuario el NIA del alumno
+	        System.out.print("Introduce el NIA del alumno cuyo nombre quieres modificar: ");
+	        int nia = sc.nextInt();
+	        sc.nextLine(); // Limpiar buffer
+
+	        // Solicitar el nuevo nombre del alumno
+	        System.out.print("Introduce el nuevo nombre para el alumno: ");
+	        String nuevoNombre = sc.nextLine().trim().toUpperCase();
+
+	        // Validar que el nombre no esté vacío
+	        if (nuevoNombre.isEmpty()) {
+	            System.out.println("❌ El nombre no puede estar vacío.");
+	            return;
+	        }
+
+	        // Llamar directamente al modelo sin gestionar la conexión aquí
+	        if (modelo.modificarNombreAlumnoPorNIA(nia, nuevoNombre)) {
+	            System.out.println("✅ Nombre del alumno modificado correctamente.");
+	        } else {
+	            System.out.println("⚠ No se pudo modificar el nombre del alumno. Verifica el NIA.");
+	        }
+	    } catch (Exception e) {
+	        System.out.println("❌ Ocurrió un error al modificar el nombre del alumno: " + e.getMessage());
+	    }
 	}
 
 	/**
@@ -253,19 +255,13 @@ public class VistaConsola implements IVista {
 	 * los grupos existentes y permite al usuario seleccionar uno. Luego elimina a
 	 * todos los alumnos que pertenezcan al grupo seleccionado.
 	 */
-
 	public void eliminarAlumnosPorGrupo(AlumnosDAO modelo) {
-		try (Connection conexionBD = PoolConexiones.getConnection()) {
+		try {
 			// Mostramos los grupos disponibles
 			System.out.println("Grupos disponibles:");
-
-			try {
-				if (!AlumnosBD.mostrarTodosLosGrupos()) {
-					System.out.println("No hay grupos registrados.");
-					return;
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
+			if (!modelo.mostrarTodosLosGrupos()) { // ✅ Usa el modelo en lugar de `AlumnosBD`
+				System.out.println("No hay grupos registrados.");
+				return;
 			}
 
 			// Pedimos al usuario el nombre del grupo a eliminar
@@ -282,15 +278,14 @@ public class VistaConsola implements IVista {
 				return;
 			}
 
-			// Llamamos al gestor para realizar la operación
+			// Llamamos al método del modelo para eliminar los alumnos
 			if (modelo.eliminarAlumnosPorGrupo(nombreGrupo)) {
-				System.out.println("Alumnos del grupo " + nombreGrupo + " eliminados correctamente.");
+				System.out.println("✅ Alumnos del grupo " + nombreGrupo + " eliminados correctamente.");
 			} else {
-				System.out.println(
-						"No se pudieron eliminar los alumnos del grupo especificado. Verifica el nombre del grupo.");
+				System.out.println("❌ No se pudieron eliminar los alumnos. Verifica el nombre del grupo.");
 			}
 		} catch (Exception e) {
-			System.out.println("Ocurrió un error al eliminar alumnos por grupo: " + e.getMessage());
+			System.out.println("❌ Ocurrió un error al eliminar alumnos por grupo: " + e.getMessage());
 		}
 	}
 

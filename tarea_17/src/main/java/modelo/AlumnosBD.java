@@ -745,7 +745,9 @@ public class AlumnosBD implements AlumnosDAO {
 	 * @return true si se muestran los grupos correctamente, false si no hay grupos
 	 *         o hay un error.
 	 */
-	public static boolean mostrarTodosLosGrupos() {
+
+	@Override
+	public boolean mostrarTodosLosGrupos() {
 		String sql = "SELECT nombreGrupo FROM grupos";
 
 		try (Connection conexion = PoolConexiones.getConnection();
@@ -957,8 +959,6 @@ public class AlumnosBD implements AlumnosDAO {
 
 		return false;
 	}
-
-	// Tarea 16:
 
 	/**
 	 * Muestra todos los alumnos del grupo seleccionado por el usuario.
@@ -1205,5 +1205,4 @@ public class AlumnosBD implements AlumnosDAO {
 
 		return false;
 	}
-
 }
