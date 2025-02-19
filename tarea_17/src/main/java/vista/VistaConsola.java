@@ -179,18 +179,15 @@ public class VistaConsola implements IVista {
 	 * Permite leer alumnos desde el fichero fijo "alumnos.txt" y guardarlos en la
 	 * base de datos.
 	 */
-
 	public void leerAlumnosDesdeFichero(AlumnosDAO modelo) {
 		try {
-			Connection conexionBD = PoolConexiones.getConnection();
-
 			if (modelo.leerAlumnosDeFicheroTexto()) {
-				System.out.println("Alumnos leídos e insertados correctamente desde el fichero 'alumnos.txt'.");
+				System.out.println("✅ Alumnos leídos e insertados correctamente desde el fichero 'alumnos.txt'.");
 			} else {
-				System.out.println("Ocurrió un error al procesar el fichero.");
+				System.out.println("❌ Ocurrió un error al procesar el fichero.");
 			}
 		} catch (Exception e) {
-			System.out.println("Error: " + e.getMessage());
+			System.out.println("❌ Error al leer los alumnos desde el fichero: " + e.getMessage());
 		}
 	}
 
