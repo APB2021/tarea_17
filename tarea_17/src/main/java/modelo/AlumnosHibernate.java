@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -150,7 +151,7 @@ public class AlumnosHibernate implements AlumnosDAO {
 		}
 	}
 
-	// 3. Mostrar todos los alumnos. //////////////////////////////////
+	// 3. y 12. Mostrar todos los alumnos. //////////////////////////////////
 
 	@Override
 	public boolean mostrarTodosLosAlumnos(boolean mostrarTodaLaInformacion) {
@@ -160,6 +161,14 @@ public class AlumnosHibernate implements AlumnosDAO {
 			if (alumnos.isEmpty()) {
 				System.out.println("No hay alumnos registrados.");
 				return false;
+			}
+
+			List<Integer> listaNias = new ArrayList<>();
+
+			if (mostrarTodaLaInformacion) {
+				System.out.println("Lista completa de alumnos registrados:");
+			} else {
+				System.out.println("Lista de alumnos (NIA y Nombre):");
 			}
 
 			for (Alumno alumno : alumnos) {
@@ -180,11 +189,37 @@ public class AlumnosHibernate implements AlumnosDAO {
 							(alumno.getGrupo() != null ? alumno.getGrupo().getNombreGrupo() : "Sin grupo"));
 				} else {
 					System.out.printf("NIA: %d, Nombre: %s%n", alumno.getNia(), alumno.getNombre());
+					listaNias.add(alumno.getNia());
 				}
 			}
+
+			// Si estamos en modo "NIA y nombre", permitir al usuario seleccionar un NIA
+			if (!mostrarTodaLaInformacion) {
+				System.out.println("\nIntroduce el NIA del alumno que deseas visualizar (o 0 para salir):");
+				while (true) {
+					try {
+						int niaSeleccionado = Integer.parseInt(sc.nextLine().trim());
+
+						if (niaSeleccionado == 0) {
+							System.out.println("Saliendo sin seleccionar un alumno.");
+							return true;
+						}
+
+						if (listaNias.contains(niaSeleccionado)) {
+							return mostrarAlumnoPorNIA(niaSeleccionado);
+						} else {
+							System.out.println("El NIA seleccionado no está en la lista. Inténtalo de nuevo.");
+						}
+					} catch (NumberFormatException e) {
+						System.out.println("El NIA debe ser un número válido. Inténtalo de nuevo:");
+					}
+				}
+			}
+
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.out.println("Se produjo un error al recuperar los alumnos. Revisa los logs para más detalles.");
 			return false;
 		}
 	}
@@ -611,13 +646,42 @@ public class AlumnosHibernate implements AlumnosDAO {
 		}
 	}
 
-	//
+	// 12. y 3. Mostrar todos los alumnos. //////////////////////////////////
 
 	@Override
 	public boolean mostrarAlumnoPorNIA(int nia) {
-		// TODO Auto-generated method stub
-		return false;
+		try (Session session = getSession()) {
+			Alumno alumno = session.get(Alumno.class, nia);
+
+			if (alumno == null) {
+				System.out.println("❌ No se encontró un alumno con el NIA: " + nia);
+				return false;
+			}
+
+			// Mostrar la información detallada del alumno
+			System.out.printf("""
+					-------------------------
+					NIA: %d
+					Nombre: %s
+					Apellidos: %s
+					Género: %s
+					Fecha de nacimiento: %s
+					Ciclo: %s
+					Curso: %s
+					Grupo: %s
+					""", alumno.getNia(), alumno.getNombre(), alumno.getApellidos(), alumno.getGenero(),
+					new SimpleDateFormat("dd-MM-yyyy").format(alumno.getFechaNacimiento()), alumno.getCiclo(),
+					alumno.getCurso(), (alumno.getGrupo() != null ? alumno.getGrupo().getNombreGrupo() : "Sin grupo"));
+
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("❌ Ocurrió un error al recuperar los datos del alumno.");
+			return false;
+		}
 	}
+
+	//
 
 	@Override
 	public boolean eliminarAlumnosPorApellidos(String apellidos) {

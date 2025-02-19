@@ -332,10 +332,11 @@ public class VistaConsola implements IVista {
 	/**
 	 * Muestra los alumnos del grupo seleccionado por el usuario.
 	 *
-	 * @param modelo Objeto que implementa la interfaz AlumnosDAO para realizar operaciones con la base de datos.
+	 * @param modelo Objeto que implementa la interfaz AlumnosDAO para realizar
+	 *               operaciones con la base de datos.
 	 */
 	public void mostrarAlumnosPorGrupo(AlumnosDAO modelo) {
-	    modelo.mostrarAlumnosPorGrupo();
+		modelo.mostrarAlumnosPorGrupo();
 	}
 
 	/**
