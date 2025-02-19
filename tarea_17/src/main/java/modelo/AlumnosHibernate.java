@@ -222,81 +222,81 @@ public class AlumnosHibernate implements AlumnosDAO {
 
 	@Override
 	public boolean leerAlumnosDeFicheroTexto() {
-	    String fichero = "alumnos.txt";
-	    int lineasInsertadas = 0;
+		String fichero = "alumnos.txt";
+		int lineasInsertadas = 0;
 
-	    try (BufferedReader br = new BufferedReader(new FileReader(fichero));
-	         Session session = getSession()) {
+		try (BufferedReader br = new BufferedReader(new FileReader(fichero)); Session session = getSession()) {
 
-	        Transaction tx = session.beginTransaction();
-	        String linea;
+			Transaction tx = session.beginTransaction();
+			String linea;
 
-	        // Ignorar la primera línea (cabecera)
-	        br.readLine();
+			// Ignorar la primera línea (cabecera)
+			br.readLine();
 
-	        while ((linea = br.readLine()) != null) {
-	            System.out.println("📖 Leyendo línea: " + linea);
+			while ((linea = br.readLine()) != null) {
+				System.out.println("📖 Leyendo línea: " + linea);
 
-	            // Separar los campos por coma
-	            String[] datos = linea.split(",");
+				// Separar los campos por coma
+				String[] datos = linea.split(",");
 
-	            // Verificar que la línea tenga 8 campos
-	            if (datos.length == 8) {
-	                try {
-	                    String nombre = datos[1].trim().toUpperCase();
-	                    String apellidos = datos[2].trim().toUpperCase();
-	                    char genero = datos[3].trim().toUpperCase().charAt(0);
-	                    String fechaNacimiento = datos[4].trim();
-	                    String ciclo = datos[5].trim().toUpperCase();
-	                    String curso = datos[6].trim().toUpperCase();
-	                    String nombreGrupo = datos[7].trim().toUpperCase();
+				// Verificar que la línea tenga 8 campos
+				if (datos.length == 8) {
+					try {
+						String nombre = datos[1].trim().toUpperCase();
+						String apellidos = datos[2].trim().toUpperCase();
+						char genero = datos[3].trim().toUpperCase().charAt(0);
+						String fechaNacimiento = datos[4].trim();
+						String ciclo = datos[5].trim().toUpperCase();
+						String curso = datos[6].trim().toUpperCase();
+						String nombreGrupo = datos[7].trim().toUpperCase();
 
-	                    // Convertir la fecha
-	                    SimpleDateFormat formatoFecha = new SimpleDateFormat("dd-MM-yyyy");
-	                    Date fechaUtil = formatoFecha.parse(fechaNacimiento);
+						// Convertir la fecha
+						SimpleDateFormat formatoFecha = new SimpleDateFormat("dd-MM-yyyy");
+						Date fechaUtil = formatoFecha.parse(fechaNacimiento);
 
-	                    // Buscar si el grupo ya existe
-	                    Grupo grupo = session.createQuery("FROM Grupo g WHERE g.nombreGrupo = :nombreGrupo", Grupo.class)
-	                                         .setParameter("nombreGrupo", nombreGrupo)
-	                                         .uniqueResult();
+						// Buscar si el grupo ya existe
+						Grupo grupo = session
+								.createQuery("FROM Grupo g WHERE g.nombreGrupo = :nombreGrupo", Grupo.class)
+								.setParameter("nombreGrupo", nombreGrupo).uniqueResult();
 
-	                    // Si el grupo no existe, crearlo
-	                    if (grupo == null) {
-	                        grupo = new Grupo(nombreGrupo);
-	                        session.persist(grupo);
-	                    }
+						// Si el grupo no existe, crearlo
+						if (grupo == null) {
+							grupo = new Grupo(nombreGrupo);
+							session.persist(grupo);
+						}
 
-	                    // Crear e insertar el alumno
-	                    Alumno alumno = new Alumno(nombre, apellidos, genero, fechaUtil, ciclo, curso, grupo);
-	                    session.persist(alumno);
-	                    lineasInsertadas++;
-	                    System.out.println("✅ Alumno insertado: " + nombre + " " + apellidos);
-	                } catch (ParseException e) {
-	                    System.out.println("❌ Error al convertir la fecha: " + datos[4]);
-	                }
-	            } else {
-	                System.out.println("⚠ Línea inválida en el fichero (número de campos incorrecto): " + linea);
-	            }
-	        }
+						// Crear e insertar el alumno
+						Alumno alumno = new Alumno(nombre, apellidos, genero, fechaUtil, ciclo, curso, grupo);
+						session.persist(alumno);
+						lineasInsertadas++;
+						System.out.println("✅ Alumno insertado: " + nombre + " " + apellidos);
+					} catch (ParseException e) {
+						System.out.println("❌ Error al convertir la fecha: " + datos[4]);
+					}
+				} else {
+					System.out.println("⚠ Línea inválida en el fichero (número de campos incorrecto): " + linea);
+				}
+			}
 
-	        tx.commit();
+			tx.commit();
 
-	        if (lineasInsertadas > 0) {
-	            System.out.println("✅ Alumnos insertados correctamente desde el fichero.");
-	            return true;
-	        } else {
-	            System.out.println("❌ No se insertaron alumnos.");
-	            return false;
-	        }
-	    } catch (IOException e) {
-	        System.out.println("❌ Error al leer el archivo: " + e.getMessage());
-	        return false;
-	    } catch (Exception e) {
-	        System.out.println("❌ Error en la base de datos al insertar alumnos: " + e.getMessage());
-	        return false;
-	    }
+			if (lineasInsertadas > 0) {
+				System.out.println("✅ Alumnos insertados correctamente desde el fichero.");
+				return true;
+			} else {
+				System.out.println("❌ No se insertaron alumnos.");
+				return false;
+			}
+		} catch (IOException e) {
+			System.out.println("❌ Error al leer el archivo: " + e.getMessage());
+			return false;
+		} catch (Exception e) {
+			System.out.println("❌ Error en la base de datos al insertar alumnos: " + e.getMessage());
+			return false;
+		}
 	}
 
+	// 6. Modificar el nombre de un alumno por su NIA. //////////////////////
 
 	@Override
 	public boolean modificarNombreAlumnoPorNIA(int nia, String nuevoNombre) {
@@ -319,6 +319,8 @@ public class AlumnosHibernate implements AlumnosDAO {
 			return false;
 		}
 	}
+
+	// 7. Eliminar un alumno a partir de su NIA. ///////////////////////
 
 	@Override
 	public boolean eliminarAlumnoPorNIA(int nia) {

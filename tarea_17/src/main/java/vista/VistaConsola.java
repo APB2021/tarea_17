@@ -148,14 +148,14 @@ public class VistaConsola implements IVista {
 	}
 
 	public void mostrarTodosLosAlumnos(AlumnosDAO modelo, boolean mostrarTodaLaInformación) {
-		try (Connection conexionBD = PoolConexiones.getConnection()) {
+		try {
 			if (modelo.mostrarTodosLosAlumnos(mostrarTodaLaInformación)) {
-				System.out.println("Los alumnos se han mostrado correctamente.");
+				System.out.println("✅ Los alumnos se han mostrado correctamente.");
 			} else {
-				System.out.println("No se pudieron mostrar los alumnos.");
+				System.out.println("❌ No se pudieron mostrar los alumnos.");
 			}
 		} catch (Exception e) {
-			System.out.println("Ocurrió un error al mostrar los alumnos: " + e.getMessage());
+			System.out.println("❌ Ocurrió un error al mostrar los alumnos: " + e.getMessage());
 		}
 	}
 
@@ -191,7 +191,26 @@ public class VistaConsola implements IVista {
 		}
 	}
 
-	// TAREA 16:
+	/**
+	 * Permite eliminar un alumno de la base de datos a partir de su NIA (PK).
+	 */
+	public void eliminarAlumnoPorNIA(AlumnosDAO modelo) {
+	    try {
+	        // Solicitar NIA al usuario
+	        System.out.println("Introduce el NIA del alumno a eliminar:");
+	        int nia = sc.nextInt();
+	        sc.nextLine(); // Limpiar buffer
+
+	        // Llamar directamente al DAO sin abrir la conexión
+	        if (modelo.eliminarAlumnoPorNIA(nia)) {
+	            System.out.println("✅ Alumno eliminado correctamente.");
+	        } else {
+	            System.out.println("❌ No se encontró un alumno con el NIA proporcionado.");
+	        }
+	    } catch (Exception e) {
+	        System.out.println("❌ Ocurrió un error al intentar eliminar el alumno: " + e.getMessage());
+	    }
+	}
 
 	/**
 	 * Permite modificar el nombre de un alumno solicitando su NIA y el nuevo
@@ -226,32 +245,6 @@ public class VistaConsola implements IVista {
 			} // La conexión se cierra automáticamente aquí
 		} catch (Exception e) {
 			System.out.println("Ocurrió un error al modificar el nombre del alumno: " + e.getMessage());
-		}
-	}
-
-	/**
-	 * Permite eliminar un alumno de la base de datos a partir de su NIA (PK).
-	 */
-
-	public void eliminarAlumnoPorNIA(AlumnosDAO modelo) {
-		try {
-			// Solicitar NIA al usuario
-			System.out.println("Introduce el NIA del alumno a eliminar:");
-			int nia = sc.nextInt();
-			sc.nextLine(); // Limpiar buffer
-
-			// Usar try-with-resources para manejar la conexión a la base de datos
-			try (Connection conexionBD = PoolConexiones.getConnection()) {
-				// Intentar eliminar el alumno
-				if (modelo.eliminarAlumnoPorNIA(nia)) {
-					System.out.println("Alumno eliminado correctamente.");
-				} else {
-					System.out.println("No se encontró un alumno con el NIA proporcionado.");
-				}
-			}
-		} catch (Exception e) {
-			System.out.println("Ocurrió un error al intentar eliminar el alumno: " + e.getMessage());
-			// Aquí también podrías añadir un log en nivel ERROR si estás usando Log4j
 		}
 	}
 
