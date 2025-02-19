@@ -331,18 +331,11 @@ public class VistaConsola implements IVista {
 
 	/**
 	 * Muestra los alumnos del grupo seleccionado por el usuario.
-	 * 
-	 * @param modelo Objeto que implementa la interfaz IAlumnosDao para realizar
-	 *               operaciones con la base de datos.
+	 *
+	 * @param modelo Objeto que implementa la interfaz AlumnosDAO para realizar operaciones con la base de datos.
 	 */
-
 	public void mostrarAlumnosPorGrupo(AlumnosDAO modelo) {
-		try (Connection conexionBD = PoolConexiones.getConnection()) {
-			// Llamar al método mostrarAlumnosPorGrupo desde el modelo (AlumnosBD)
-			((AlumnosBD) modelo).mostrarAlumnosPorGrupo();
-		} catch (Exception e) {
-			System.out.println("Se produjo un error al intentar mostrar los alumnos por grupo. Revisa los logs.");
-		}
+	    modelo.mostrarAlumnosPorGrupo();
 	}
 
 	/**

@@ -473,93 +473,146 @@ public class AlumnosHibernate implements AlumnosDAO {
 			return false;
 		}
 	}
-	
+
 	// 10. Leer un archivo XML de grupos y guardar los datos en la BD.
 
 	@Override
 	public boolean leerYGuardarGruposXML(String rutaArchivo) {
-	    try {
-	        File archivoXML = new File("grupos.xml"); // Usamos la ruta fija
-	        if (!archivoXML.exists()) {
-	            System.out.println("❌ El archivo XML no existe en la ruta especificada.");
-	            return false;
-	        }
+		try {
+			File archivoXML = new File("grupos.xml"); // Usamos la ruta fija
+			if (!archivoXML.exists()) {
+				System.out.println("❌ El archivo XML no existe en la ruta especificada.");
+				return false;
+			}
 
-	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	        DocumentBuilder builder = factory.newDocumentBuilder();
-	        Document documento = builder.parse(archivoXML);
-	        documento.getDocumentElement().normalize();
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document documento = builder.parse(archivoXML);
+			documento.getDocumentElement().normalize();
 
-	        NodeList listaGrupos = documento.getElementsByTagName("grupo");
+			NodeList listaGrupos = documento.getElementsByTagName("grupo");
 
-	        try (Session session = getSession()) {
-	            Transaction tx = session.beginTransaction();
+			try (Session session = getSession()) {
+				Transaction tx = session.beginTransaction();
 
-	            for (int i = 0; i < listaGrupos.getLength(); i++) {
-	                Node nodoGrupo = listaGrupos.item(i);
-	                if (nodoGrupo.getNodeType() == Node.ELEMENT_NODE) {
-	                    Element elementoGrupo = (Element) nodoGrupo;
+				for (int i = 0; i < listaGrupos.getLength(); i++) {
+					Node nodoGrupo = listaGrupos.item(i);
+					if (nodoGrupo.getNodeType() == Node.ELEMENT_NODE) {
+						Element elementoGrupo = (Element) nodoGrupo;
 
-	                    String nombreGrupo = elementoGrupo.getAttribute("nombreGrupo");
+						String nombreGrupo = elementoGrupo.getAttribute("nombreGrupo");
 
-	                    // Verificar si el grupo ya existe antes de insertarlo
-	                    Grupo grupoExistente = session.createQuery(
-	                            "FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
-	                            .setParameter("nombreGrupo", nombreGrupo)
-	                            .uniqueResult();
+						// Verificar si el grupo ya existe antes de insertarlo
+						Grupo grupoExistente = session
+								.createQuery("FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
+								.setParameter("nombreGrupo", nombreGrupo).uniqueResult();
 
-	                    Grupo grupo;
-	                    if (grupoExistente != null) {
-	                        grupo = grupoExistente;
-	                    } else {
-	                        grupo = new Grupo(nombreGrupo);
-	                        session.persist(grupo);
-	                        session.flush(); // Forzar escritura para obtener el ID
-	                    }
+						Grupo grupo;
+						if (grupoExistente != null) {
+							grupo = grupoExistente;
+						} else {
+							grupo = new Grupo(nombreGrupo);
+							session.persist(grupo);
+							session.flush(); // Forzar escritura para obtener el ID
+						}
 
-	                    NodeList listaAlumnos = elementoGrupo.getElementsByTagName("alumno");
-	                    for (int j = 0; j < listaAlumnos.getLength(); j++) {
-	                        Node nodoAlumno = listaAlumnos.item(j);
-	                        if (nodoAlumno.getNodeType() == Node.ELEMENT_NODE) {
-	                            Element elementoAlumno = (Element) nodoAlumno;
+						NodeList listaAlumnos = elementoGrupo.getElementsByTagName("alumno");
+						for (int j = 0; j < listaAlumnos.getLength(); j++) {
+							Node nodoAlumno = listaAlumnos.item(j);
+							if (nodoAlumno.getNodeType() == Node.ELEMENT_NODE) {
+								Element elementoAlumno = (Element) nodoAlumno;
 
-	                            String nombre = elementoAlumno.getAttribute("nombre");
-	                            String apellidos = elementoAlumno.getAttribute("apellidos");
-	                            char genero = elementoAlumno.getAttribute("genero").charAt(0);
-	                            
-	                            
-	                            SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd"); // Ajusta el formato según el XML
-	                            java.util.Date fechaUtil = formato.parse(elementoAlumno.getAttribute("fechaNacimiento"));
-	                            java.sql.Date fechaNacimiento = new java.sql.Date(fechaUtil.getTime());
+								String nombre = elementoAlumno.getAttribute("nombre");
+								String apellidos = elementoAlumno.getAttribute("apellidos");
+								char genero = elementoAlumno.getAttribute("genero").charAt(0);
 
-	                            
-	                            
-	                            
-	                            
-	                            //Date fechaNacimiento = Date.valueOf(elementoAlumno.getAttribute("fechaNacimiento"));
-	                            String ciclo = elementoAlumno.getAttribute("ciclo");
-	                            String curso = elementoAlumno.getAttribute("curso");
+								SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd"); // Ajusta el formato
+																								// según el XML
+								java.util.Date fechaUtil = formato
+										.parse(elementoAlumno.getAttribute("fechaNacimiento"));
+								java.sql.Date fechaNacimiento = new java.sql.Date(fechaUtil.getTime());
 
-	                            Alumno alumno = new Alumno(nombre, apellidos, genero, fechaNacimiento, ciclo, curso, grupo);
-	                            session.persist(alumno);
-	                        }
-	                    }
-	                }
-	            }
+								// Date fechaNacimiento =
+								// Date.valueOf(elementoAlumno.getAttribute("fechaNacimiento"));
+								String ciclo = elementoAlumno.getAttribute("ciclo");
+								String curso = elementoAlumno.getAttribute("curso");
 
-	            tx.commit();
-	            System.out.println("✅ Archivo XML procesado correctamente. Datos guardados en la BD.");
-	            return true;
-	        }
+								Alumno alumno = new Alumno(nombre, apellidos, genero, fechaNacimiento, ciclo, curso,
+										grupo);
+								session.persist(alumno);
+							}
+						}
+					}
+				}
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        System.out.println("❌ Error al procesar el archivo XML: " + e.getMessage());
-	        return false;
-	    }
+				tx.commit();
+				System.out.println("✅ Archivo XML procesado correctamente. Datos guardados en la BD.");
+				return true;
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("❌ Error al procesar el archivo XML: " + e.getMessage());
+			return false;
+		}
 	}
 
-	
+	// 11. Mostrar todos los alumnos del grupo elegido.
+
+	@Override
+	public void mostrarAlumnosPorGrupo() {
+		// Mostrar todos los grupos antes de pedir el nombre
+		if (!mostrarTodosLosGrupos()) {
+			System.out.println("No hay grupos disponibles para mostrar.");
+			return;
+		}
+
+		System.out.println("Introduce el nombre del grupo del que quieres ver los alumnos:");
+		String nombreGrupo = sc.nextLine().trim().toUpperCase();
+
+		try (Session session = getSession()) {
+			// Obtener el grupo
+			Grupo grupo = session.createQuery("FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
+					.setParameter("nombreGrupo", nombreGrupo).uniqueResult();
+
+			if (grupo == null) {
+				System.out.println("❌ El grupo especificado no existe. Inténtalo de nuevo.");
+				return;
+			}
+
+			// Obtener alumnos del grupo
+			List<Alumno> alumnos = session.createQuery("FROM Alumno WHERE grupo = :grupo", Alumno.class)
+					.setParameter("grupo", grupo).getResultList();
+
+			if (alumnos.isEmpty()) {
+				System.out.println("❌ No hay alumnos registrados en este grupo.");
+				return;
+			}
+
+			// Mostrar alumnos en formato estructurado
+			System.out.println("📋 Alumnos del grupo '" + nombreGrupo + "':");
+			for (Alumno alumno : alumnos) {
+				System.out.printf("""
+						NIA: %d
+						Nombre: %s
+						Apellidos: %s
+						Género: %s
+						Fecha de nacimiento: %s
+						Ciclo: %s
+						Curso: %s
+						Grupo: %s
+						-------------------------\n
+						""", alumno.getNia(), alumno.getNombre(), alumno.getApellidos(), alumno.getGenero(),
+						alumno.getFechaNacimiento(), alumno.getCiclo(), alumno.getCurso(), grupo.getNombreGrupo());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("❌ Se produjo un error al intentar mostrar los alumnos. Revisa los logs.");
+		}
+	}
+
+	//
+
 	@Override
 	public boolean mostrarAlumnoPorNIA(int nia) {
 		// TODO Auto-generated method stub
@@ -594,14 +647,6 @@ public class AlumnosHibernate implements AlumnosDAO {
 	public boolean leerGruposDeFicheroJSON() {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	
-
-	@Override
-	public void mostrarAlumnosPorGrupo() {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
