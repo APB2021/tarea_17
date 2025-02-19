@@ -306,11 +306,10 @@ public class VistaConsola implements IVista {
 	}
 
 	/**
-	 * Lee el archivo XML de grupos (alumnos.xml) y guarda los datos en la base de
+	 * Lee el archivo XML de grupos (grupos.xml) y guarda los datos en la base de
 	 * datos MySQL. Si ocurre un error durante el proceso, se captura la excepción y
 	 * se muestra un mensaje de error.
 	 */
-
 	public void leerYGuardarGruposXML(AlumnosDAO modelo) {
 		// Ruta fija del archivo XML de grupos
 		String rutaArchivo = "grupos.xml";
@@ -318,27 +317,17 @@ public class VistaConsola implements IVista {
 		// Verificamos si el archivo existe
 		File archivoXML = new File(rutaArchivo);
 		if (!archivoXML.exists()) {
-			System.out.println("El archivo XML no existe en la ruta especificada: " + rutaArchivo);
+			System.out.println("❌ El archivo XML no existe en la ruta especificada: " + rutaArchivo);
 			return; // Salimos del método si el archivo no existe
 		}
 
-		// Usamos try-with-resources para manejar la conexión
-		try (Connection conexionBD = PoolConexiones.getConnection()) {
-			// Llamamos al método de GestorGrupos para leer los grupos en el archivo XML
-			if (modelo.leerYGuardarGruposXML(rutaArchivo)) {
-				// Si el proceso es exitoso, mostramos un mensaje de éxito
-				System.out.println("Archivo XML leído correctamente y datos guardados en la base de datos.");
-			} else {
-				// Si hubo un error en el proceso, mostramos un mensaje de fallo
-				System.out.println("Error al procesar el archivo XML.");
-			}
-		} catch (Exception e) {
-			// Capturamos cualquier excepción y mostramos el mensaje de error
-			System.out.println("Ocurrió un error al leer los grupos en XML: " + e.getMessage());
+		// Llamamos directamente al método del modelo sin manejar conexiones
+		if (modelo.leerYGuardarGruposXML(rutaArchivo)) {
+			System.out.println("✅ Archivo XML leído correctamente y datos guardados en la base de datos.");
+		} else {
+			System.out.println("❌ Error al procesar el archivo XML.");
 		}
 	}
-
-	// Tarea 16:
 
 	/**
 	 * Muestra los alumnos del grupo seleccionado por el usuario.

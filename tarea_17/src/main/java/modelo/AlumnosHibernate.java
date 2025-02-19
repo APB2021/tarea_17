@@ -26,6 +26,8 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Utilizará Hibernate para acceder a los datos.
@@ -471,7 +473,93 @@ public class AlumnosHibernate implements AlumnosDAO {
 			return false;
 		}
 	}
+	
+	// 10. Leer un archivo XML de grupos y guardar los datos en la BD.
 
+	@Override
+	public boolean leerYGuardarGruposXML(String rutaArchivo) {
+	    try {
+	        File archivoXML = new File("grupos.xml"); // Usamos la ruta fija
+	        if (!archivoXML.exists()) {
+	            System.out.println("❌ El archivo XML no existe en la ruta especificada.");
+	            return false;
+	        }
+
+	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	        DocumentBuilder builder = factory.newDocumentBuilder();
+	        Document documento = builder.parse(archivoXML);
+	        documento.getDocumentElement().normalize();
+
+	        NodeList listaGrupos = documento.getElementsByTagName("grupo");
+
+	        try (Session session = getSession()) {
+	            Transaction tx = session.beginTransaction();
+
+	            for (int i = 0; i < listaGrupos.getLength(); i++) {
+	                Node nodoGrupo = listaGrupos.item(i);
+	                if (nodoGrupo.getNodeType() == Node.ELEMENT_NODE) {
+	                    Element elementoGrupo = (Element) nodoGrupo;
+
+	                    String nombreGrupo = elementoGrupo.getAttribute("nombreGrupo");
+
+	                    // Verificar si el grupo ya existe antes de insertarlo
+	                    Grupo grupoExistente = session.createQuery(
+	                            "FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
+	                            .setParameter("nombreGrupo", nombreGrupo)
+	                            .uniqueResult();
+
+	                    Grupo grupo;
+	                    if (grupoExistente != null) {
+	                        grupo = grupoExistente;
+	                    } else {
+	                        grupo = new Grupo(nombreGrupo);
+	                        session.persist(grupo);
+	                        session.flush(); // Forzar escritura para obtener el ID
+	                    }
+
+	                    NodeList listaAlumnos = elementoGrupo.getElementsByTagName("alumno");
+	                    for (int j = 0; j < listaAlumnos.getLength(); j++) {
+	                        Node nodoAlumno = listaAlumnos.item(j);
+	                        if (nodoAlumno.getNodeType() == Node.ELEMENT_NODE) {
+	                            Element elementoAlumno = (Element) nodoAlumno;
+
+	                            String nombre = elementoAlumno.getAttribute("nombre");
+	                            String apellidos = elementoAlumno.getAttribute("apellidos");
+	                            char genero = elementoAlumno.getAttribute("genero").charAt(0);
+	                            
+	                            
+	                            SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd"); // Ajusta el formato según el XML
+	                            java.util.Date fechaUtil = formato.parse(elementoAlumno.getAttribute("fechaNacimiento"));
+	                            java.sql.Date fechaNacimiento = new java.sql.Date(fechaUtil.getTime());
+
+	                            
+	                            
+	                            
+	                            
+	                            //Date fechaNacimiento = Date.valueOf(elementoAlumno.getAttribute("fechaNacimiento"));
+	                            String ciclo = elementoAlumno.getAttribute("ciclo");
+	                            String curso = elementoAlumno.getAttribute("curso");
+
+	                            Alumno alumno = new Alumno(nombre, apellidos, genero, fechaNacimiento, ciclo, curso, grupo);
+	                            session.persist(alumno);
+	                        }
+	                    }
+	                }
+	            }
+
+	            tx.commit();
+	            System.out.println("✅ Archivo XML procesado correctamente. Datos guardados en la BD.");
+	            return true;
+	        }
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        System.out.println("❌ Error al procesar el archivo XML: " + e.getMessage());
+	        return false;
+	    }
+	}
+
+	
 	@Override
 	public boolean mostrarAlumnoPorNIA(int nia) {
 		// TODO Auto-generated method stub
@@ -508,11 +596,7 @@ public class AlumnosHibernate implements AlumnosDAO {
 		return false;
 	}
 
-	@Override
-	public boolean leerYGuardarGruposXML(String rutaArchivo) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+	
 
 	@Override
 	public void mostrarAlumnosPorGrupo() {

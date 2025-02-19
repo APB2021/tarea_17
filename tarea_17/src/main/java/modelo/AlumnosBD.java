@@ -869,7 +869,109 @@ public class AlumnosBD implements AlumnosDAO {
 	 * @return true si los datos fueron procesados e insertados correctamente, false
 	 *         en caso de error.
 	 */
+	
+	public boolean leerYGuardarGruposXML(String rutaArchivo) {
+	    File archivoXML = new File(rutaArchivo);
+	    if (!archivoXML.exists()) {
+	        loggerExcepciones.error("El archivo XML no existe: {}", rutaArchivo);
+	        System.err.println("El archivo XML no existe: " + rutaArchivo);
+	        return false;
+	    }
 
+	    try {
+	        DocumentBuilderFactory fabricaDocumentos = DocumentBuilderFactory.newInstance();
+	        DocumentBuilder constructorDocumentos = fabricaDocumentos.newDocumentBuilder();
+	        Document documentoXML = constructorDocumentos.parse(archivoXML);
+	        documentoXML.getDocumentElement().normalize();
+
+	        NodeList listaGrupos = documentoXML.getElementsByTagName("grupo");
+
+	        String sqlVerificarGrupo = "SELECT numeroGrupo FROM grupos WHERE nombreGrupo = ?";
+	        String sqlInsertarGrupo = "INSERT INTO grupos (nombreGrupo) VALUES (?)";
+	        String sqlInsertarAlumno = """
+	                INSERT INTO alumnos (nombre, apellidos, genero, fechaNacimiento, ciclo, curso, numeroGrupo)
+	                VALUES (?, ?, ?, ?, ?, ?, ?)
+	                """;
+
+	        try (Connection conexion = PoolConexiones.getConnection();
+	             PreparedStatement consultaVerificarGrupo = conexion.prepareStatement(sqlVerificarGrupo);
+	             PreparedStatement consultaInsertarGrupo = conexion.prepareStatement(sqlInsertarGrupo, Statement.RETURN_GENERATED_KEYS);
+	             PreparedStatement consultaInsertarAlumno = conexion.prepareStatement(sqlInsertarAlumno)) {
+
+	            for (int i = 0; i < listaGrupos.getLength(); i++) {
+	                Node nodoGrupo = listaGrupos.item(i);
+
+	                if (nodoGrupo.getNodeType() == Node.ELEMENT_NODE) {
+	                    Element elementoGrupo = (Element) nodoGrupo;
+	                    String nombreGrupo = elementoGrupo.getAttribute("nombreGrupo").trim();
+
+	                    if (!nombreGrupo.isEmpty()) {
+	                        int numeroGrupo = -1;
+
+	                        // Verificar si el grupo ya existe en la base de datos
+	                        consultaVerificarGrupo.setString(1, nombreGrupo);
+	                        try (ResultSet resultado = consultaVerificarGrupo.executeQuery()) {
+	                            if (resultado.next()) {
+	                                numeroGrupo = resultado.getInt("numeroGrupo"); // Obtener el número del grupo existente
+	                            }
+	                        }
+
+	                        // Si el grupo no existe, lo insertamos
+	                        if (numeroGrupo == -1) {
+	                            consultaInsertarGrupo.setString(1, nombreGrupo);
+	                            consultaInsertarGrupo.executeUpdate();
+
+	                            try (ResultSet clavesGeneradas = consultaInsertarGrupo.getGeneratedKeys()) {
+	                                if (clavesGeneradas.next()) {
+	                                    numeroGrupo = clavesGeneradas.getInt(1);
+	                                }
+	                            }
+	                        }
+
+	                        // Insertar alumnos del grupo
+	                        NodeList listaAlumnos = elementoGrupo.getElementsByTagName("alumno");
+	                        for (int j = 0; j < listaAlumnos.getLength(); j++) {
+	                            Node nodoAlumno = listaAlumnos.item(j);
+
+	                            if (nodoAlumno.getNodeType() == Node.ELEMENT_NODE) {
+	                                Element elementoAlumno = (Element) nodoAlumno;
+
+	                                consultaInsertarAlumno.setString(1, elementoAlumno.getAttribute("nombre"));
+	                                consultaInsertarAlumno.setString(2, elementoAlumno.getAttribute("apellidos"));
+	                                consultaInsertarAlumno.setString(3, elementoAlumno.getAttribute("genero"));
+	                                consultaInsertarAlumno.setDate(4, java.sql.Date.valueOf(elementoAlumno.getAttribute("fechaNacimiento")));
+	                                consultaInsertarAlumno.setString(5, elementoAlumno.getAttribute("ciclo"));
+	                                consultaInsertarAlumno.setString(6, elementoAlumno.getAttribute("curso"));
+	                                consultaInsertarAlumno.setInt(7, numeroGrupo);
+
+	                                consultaInsertarAlumno.executeUpdate();
+
+	                                loggerGeneral.info("Alumno insertado: {} {}", elementoAlumno.getAttribute("nombre"), elementoAlumno.getAttribute("apellidos"));
+	                            }
+	                        }
+	                    } else {
+	                        loggerExcepciones.warn("Advertencia: Nombre del grupo vacío en el XML.");
+	                    }
+	                }
+	            }
+
+	            loggerGeneral.info("Datos cargados correctamente desde el archivo XML.");
+	            System.out.println("Datos cargados correctamente desde el archivo XML.");
+	            return true;
+	        }
+	    } catch (ParserConfigurationException | SAXException | IOException e) {
+	        loggerExcepciones.error("Error al procesar el archivo XML: {}", e.getMessage(), e);
+	        System.err.println("Error al procesar el archivo XML: " + e.getMessage());
+	    } catch (SQLException e) {
+	        loggerExcepciones.error("Error al insertar datos en la base de datos: {}", e.getMessage(), e);
+	        System.err.println("Error al insertar datos en la base de datos: " + e.getMessage());
+	    }
+
+	    return false;
+	}
+
+	
+/*
 	public boolean leerYGuardarGruposXML(String rutaArchivo) {
 		File archivoXML = new File(rutaArchivo);
 		if (!archivoXML.exists()) {
@@ -959,6 +1061,8 @@ public class AlumnosBD implements AlumnosDAO {
 
 		return false;
 	}
+	
+	*/
 
 	/**
 	 * Muestra todos los alumnos del grupo seleccionado por el usuario.
