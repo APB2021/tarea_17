@@ -2,6 +2,7 @@ package modelo;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,10 +12,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * Utilizará Hibernate para acceder a los datos.
@@ -347,60 +358,119 @@ public class AlumnosHibernate implements AlumnosDAO {
 
 	@Override
 	public boolean eliminarAlumnosPorGrupo(String nombreGrupo) {
-	    Transaction tx = null;
-	    try (Session session = getSession()) {
-	        tx = session.beginTransaction();
+		Transaction tx = null;
+		try (Session session = getSession()) {
+			tx = session.beginTransaction();
 
-	        // Obtener el grupo por su nombre
-	        Grupo grupo = session.createQuery("FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
-	                             .setParameter("nombreGrupo", nombreGrupo)
-	                             .uniqueResult();
+			// Obtener el grupo por su nombre
+			Grupo grupo = session.createQuery("FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
+					.setParameter("nombreGrupo", nombreGrupo).uniqueResult();
 
-	        if (grupo == null) {
-	            System.out.println("❌ El grupo '" + nombreGrupo + "' no existe.");
-	            return false;
-	        }
+			if (grupo == null) {
+				System.out.println("❌ El grupo '" + nombreGrupo + "' no existe.");
+				return false;
+			}
 
-	        // Eliminar los alumnos del grupo
-	        int eliminados = session.createQuery("DELETE FROM Alumno WHERE grupo = :grupo")
-	                                .setParameter("grupo", grupo)
-	                                .executeUpdate();
+			// Eliminar los alumnos del grupo
+			int eliminados = session.createMutationQuery("DELETE FROM Alumno WHERE grupo = :grupo")
+					.setParameter("grupo", grupo).executeUpdate();
 
-	        tx.commit();
-	        System.out.println("✅ Se han eliminado " + eliminados + " alumnos del grupo '" + nombreGrupo + "'.");
-	        return eliminados > 0;
-	    } catch (Exception e) {
-	        if (tx != null) tx.rollback();
-	        e.printStackTrace();
-	        return false;
-	    }
+			tx.commit();
+			System.out.println("✅ Se han eliminado " + eliminados + " alumnos del grupo '" + nombreGrupo + "'.");
+			return eliminados > 0;
+		} catch (Exception e) {
+			if (tx != null)
+				tx.rollback();
+			e.printStackTrace();
+			return false;
+		}
 	}
-	
+
 	@Override
 	public boolean mostrarTodosLosGrupos() {
-	    try (Session session = getSession()) {
-	        List<String> nombresGrupos = session.createQuery("SELECT g.nombreGrupo FROM Grupo g", String.class)
-	                                            .getResultList();
+		try (Session session = getSession()) {
+			List<String> nombresGrupos = session.createQuery("SELECT g.nombreGrupo FROM Grupo g", String.class)
+					.getResultList();
 
-	        if (nombresGrupos.isEmpty()) {
-	            System.out.println("❌ No se encontraron grupos en la base de datos.");
-	            return false;
-	        }
+			if (nombresGrupos.isEmpty()) {
+				System.out.println("❌ No se encontraron grupos en la base de datos.");
+				return false;
+			}
 
-	        System.out.println("📌 Grupos disponibles:");
-	        for (String nombre : nombresGrupos) {
-	            System.out.println("- " + nombre);
-	        }
+			System.out.println("📌 Grupos disponibles:");
+			for (String nombre : nombresGrupos) {
+				System.out.println("- " + nombre);
+			}
 
-	        return true;
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        System.out.println("❌ Error al mostrar los grupos: " + e.getMessage());
-	        return false;
-	    }
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("❌ Error al mostrar los grupos: " + e.getMessage());
+			return false;
+		}
 	}
 
+	// 9. Guardar grupos y alumnos en un archivo XML.
 
+	@Override
+	public boolean guardarGruposEnXML() {
+		String nombreArchivo = "grupos.xml";
+
+		try (Session session = getSession()) {
+			// Obtener todos los grupos con sus alumnos (Lazy Loading -> Fetch JOIN)
+			List<Grupo> grupos = session.createQuery("SELECT g FROM Grupo g LEFT JOIN FETCH g.alumnos", Grupo.class)
+					.getResultList();
+
+			if (grupos.isEmpty()) {
+				System.out.println("⚠ No hay grupos registrados para guardar.");
+				return false;
+			}
+
+			// Crear documento XML
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document doc = builder.newDocument();
+
+			// Nodo raíz <grupos>
+			Element rootElement = doc.createElement("grupos");
+			doc.appendChild(rootElement);
+
+			for (Grupo grupo : grupos) {
+				Element grupoElement = doc.createElement("grupo");
+				grupoElement.setAttribute("numeroGrupo", String.valueOf(grupo.getNumeroGrupo()));
+				grupoElement.setAttribute("nombreGrupo", grupo.getNombreGrupo());
+				rootElement.appendChild(grupoElement);
+
+				for (Alumno alumno : grupo.getAlumnos()) {
+					Element alumnoElement = doc.createElement("alumno");
+					alumnoElement.setAttribute("nia", String.valueOf(alumno.getNia()));
+					alumnoElement.setAttribute("nombre", alumno.getNombre());
+					alumnoElement.setAttribute("apellidos", alumno.getApellidos());
+					alumnoElement.setAttribute("genero", String.valueOf(alumno.getGenero()));
+					alumnoElement.setAttribute("fechaNacimiento", alumno.getFechaNacimiento().toString());
+					alumnoElement.setAttribute("ciclo", alumno.getCiclo());
+					alumnoElement.setAttribute("curso", alumno.getCurso());
+
+					grupoElement.appendChild(alumnoElement);
+				}
+			}
+
+			// Guardar el documento XML
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+			DOMSource source = new DOMSource(doc);
+			StreamResult result = new StreamResult(new File(nombreArchivo));
+			transformer.transform(source, result);
+
+			System.out.println("✅ Archivo XML guardado correctamente en " + nombreArchivo);
+			return true;
+		} catch (Exception e) {
+			System.out.println("❌ Error al generar el archivo XML: " + e.getMessage());
+			return false;
+		}
+	}
 
 	@Override
 	public boolean mostrarAlumnoPorNIA(int nia) {
@@ -434,12 +504,6 @@ public class AlumnosHibernate implements AlumnosDAO {
 
 	@Override
 	public boolean leerGruposDeFicheroJSON() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean guardarGruposEnXML() {
 		// TODO Auto-generated method stub
 		return false;
 	}

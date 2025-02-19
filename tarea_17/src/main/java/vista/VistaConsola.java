@@ -220,34 +220,35 @@ public class VistaConsola implements IVista {
 	}
 
 	/**
-	 * Permite modificar el nombre de un alumno solicitando su NIA y el nuevo nombre.
+	 * Permite modificar el nombre de un alumno solicitando su NIA y el nuevo
+	 * nombre.
 	 */
 	public void modificarNombreAlumnoPorNia(AlumnosDAO modelo) {
-	    try {
-	        // Solicitar al usuario el NIA del alumno
-	        System.out.print("Introduce el NIA del alumno cuyo nombre quieres modificar: ");
-	        int nia = sc.nextInt();
-	        sc.nextLine(); // Limpiar buffer
+		try {
+			// Solicitar al usuario el NIA del alumno
+			System.out.print("Introduce el NIA del alumno cuyo nombre quieres modificar: ");
+			int nia = sc.nextInt();
+			sc.nextLine(); // Limpiar buffer
 
-	        // Solicitar el nuevo nombre del alumno
-	        System.out.print("Introduce el nuevo nombre para el alumno: ");
-	        String nuevoNombre = sc.nextLine().trim().toUpperCase();
+			// Solicitar el nuevo nombre del alumno
+			System.out.print("Introduce el nuevo nombre para el alumno: ");
+			String nuevoNombre = sc.nextLine().trim().toUpperCase();
 
-	        // Validar que el nombre no esté vacío
-	        if (nuevoNombre.isEmpty()) {
-	            System.out.println("❌ El nombre no puede estar vacío.");
-	            return;
-	        }
+			// Validar que el nombre no esté vacío
+			if (nuevoNombre.isEmpty()) {
+				System.out.println("❌ El nombre no puede estar vacío.");
+				return;
+			}
 
-	        // Llamar directamente al modelo sin gestionar la conexión aquí
-	        if (modelo.modificarNombreAlumnoPorNIA(nia, nuevoNombre)) {
-	            System.out.println("✅ Nombre del alumno modificado correctamente.");
-	        } else {
-	            System.out.println("⚠ No se pudo modificar el nombre del alumno. Verifica el NIA.");
-	        }
-	    } catch (Exception e) {
-	        System.out.println("❌ Ocurrió un error al modificar el nombre del alumno: " + e.getMessage());
-	    }
+			// Llamar directamente al modelo sin gestionar la conexión aquí
+			if (modelo.modificarNombreAlumnoPorNIA(nia, nuevoNombre)) {
+				System.out.println("✅ Nombre del alumno modificado correctamente.");
+			} else {
+				System.out.println("⚠ No se pudo modificar el nombre del alumno. Verifica el NIA.");
+			}
+		} catch (Exception e) {
+			System.out.println("❌ Ocurrió un error al modificar el nombre del alumno: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -291,25 +292,16 @@ public class VistaConsola implements IVista {
 
 	/**
 	 * Método que se encarga de guardar los grupos y sus alumnos en un archivo XML.
-	 * Utiliza la conexión a la base de datos proporcionada por el pool de
-	 * conexiones.
 	 */
-
 	public void guardarGruposEnXML(AlumnosDAO modelo) {
-		// Usamos try-with-resources para gestionar automáticamente el cierre de la
-		// conexión
-		try (Connection conexionBD = PoolConexiones.getConnection()) {
-			// Llamamos al método de GestorGrupos para guardar los grupos en el archivo XML
+		try {
 			if (modelo.guardarGruposEnXML()) {
-				// Si el proceso es exitoso, mostramos un mensaje de éxito
-				System.out.println("Archivo XML guardado correctamente.");
+				System.out.println("✅ Archivo XML guardado correctamente.");
 			} else {
-				// Si hubo algún error, mostramos un mensaje de fallo
-				System.out.println("Error al guardar el archivo XML.");
+				System.out.println("❌ Error al guardar el archivo XML.");
 			}
 		} catch (Exception e) {
-			// Capturamos cualquier excepción y mostramos el mensaje de error
-			System.out.println("Ocurrió un error al guardar los grupos en XML: " + e.getMessage());
+			System.out.println("❌ Ocurrió un error al guardar los grupos en XML: " + e.getMessage());
 		}
 	}
 
