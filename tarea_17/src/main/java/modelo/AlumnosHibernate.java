@@ -682,96 +682,176 @@ public class AlumnosHibernate implements AlumnosDAO {
 	}
 
 	// 13. Cambiar de grupo al alumno que elija el usuario.
-	
+
 	/**
 	 * Muestra solo NIA y nombre de los alumnos sin interacción extra.
 	 * 
 	 * @return true si hay alumnos, false si no hay registros.
 	 */
 	public boolean listarNiasYNombresAlumnos() {
-	    try (Session session = getSession()) {
-	        List<Alumno> alumnos = session.createQuery("FROM Alumno", Alumno.class).list();
+		try (Session session = getSession()) {
+			List<Alumno> alumnos = session.createQuery("FROM Alumno", Alumno.class).list();
 
-	        if (alumnos.isEmpty()) {
-	            System.out.println("❌ No hay alumnos registrados.");
-	            return false;
-	        }
+			if (alumnos.isEmpty()) {
+				System.out.println("❌ No hay alumnos registrados.");
+				return false;
+			}
 
-	        System.out.println("Lista de alumnos disponibles para cambiar de grupo:");
-	        for (Alumno alumno : alumnos) {
-	            System.out.printf("NIA: %d, Nombre: %s%n", alumno.getNia(), alumno.getNombre());
-	        }
+			System.out.println("Lista de alumnos disponibles para cambiar de grupo:");
+			for (Alumno alumno : alumnos) {
+				System.out.printf("NIA: %d, Nombre: %s%n", alumno.getNia(), alumno.getNombre());
+			}
 
-	        return true;
-	    } catch (Exception e) {
-	        System.out.println("❌ Error al recuperar la lista de alumnos: " + e.getMessage());
-	        return false;
-	    }
+			return true;
+		} catch (Exception e) {
+			System.out.println("❌ Error al recuperar la lista de alumnos: " + e.getMessage());
+			return false;
+		}
 	}
-
 
 	@Override
 	public boolean cambiarGrupoAlumno() {
-	    if (!listarNiasYNombresAlumnos()) {
-	        System.out.println("❌ No hay alumnos disponibles.");
-	        return false;
-	    }
+		if (!listarNiasYNombresAlumnos()) {
+			System.out.println("❌ No hay alumnos disponibles.");
+			return false;
+		}
 
-	    System.out.println("\nIntroduce el NIA del alumno al que deseas cambiar de grupo:");
-	    int niaSeleccionado;
-	    try {
-	        niaSeleccionado = Integer.parseInt(sc.nextLine().trim());
-	    } catch (NumberFormatException e) {
-	        System.out.println("❌ El NIA debe ser un número válido.");
-	        return false;
-	    }
+		System.out.println("\nIntroduce el NIA del alumno al que deseas cambiar de grupo:");
+		int niaSeleccionado;
+		try {
+			niaSeleccionado = Integer.parseInt(sc.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("❌ El NIA debe ser un número válido.");
+			return false;
+		}
 
+		try (Session session = getSession()) {
+			Transaction tx = session.beginTransaction();
+
+			Alumno alumno = session.get(Alumno.class, niaSeleccionado);
+			if (alumno == null) {
+				System.out.println("❌ No se encontró ningún alumno con el NIA proporcionado.");
+				return false;
+			}
+
+			// Mostrar grupos disponibles
+			List<Grupo> grupos = session.createQuery("FROM Grupo", Grupo.class).list();
+			if (grupos.isEmpty()) {
+				System.out.println("❌ No hay grupos disponibles.");
+				return false;
+			}
+
+			System.out.println("\nGrupos disponibles:");
+			for (Grupo grupo : grupos) {
+				System.out.println("- " + grupo.getNombreGrupo());
+			}
+
+			System.out.println("\nIntroduce el nombre del grupo al que deseas cambiar al alumno:");
+			String nuevoGrupo = sc.nextLine().trim().toUpperCase();
+
+			Grupo grupo = session.createQuery("FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
+					.setParameter("nombreGrupo", nuevoGrupo).uniqueResult();
+
+			if (grupo == null) {
+				System.out.println("❌ El grupo especificado no existe.");
+				return false;
+			}
+
+			if (alumno.getGrupo() != null && alumno.getGrupo().getNombreGrupo().equals(nuevoGrupo)) {
+				System.out.println("⚠️ El alumno ya pertenece al grupo '" + nuevoGrupo + "'.");
+				return false;
+			}
+
+			alumno.setGrupo(grupo);
+			session.merge(alumno);
+
+			tx.commit();
+			System.out.println("✅ El grupo del alumno ha sido cambiado exitosamente.");
+			return true;
+		} catch (Exception e) {
+			System.out.println("❌ Error al cambiar el grupo del alumno: " + e.getMessage());
+			return false;
+		}
+	}
+
+	@Override
+	public boolean guardarGrupoEspecificoEnXML() {
 	    try (Session session = getSession()) {
-	        Transaction tx = session.beginTransaction();
-
-	        Alumno alumno = session.get(Alumno.class, niaSeleccionado);
-	        if (alumno == null) {
-	            System.out.println("❌ No se encontró ningún alumno con el NIA proporcionado.");
-	            return false;
-	        }
-
 	        // Mostrar grupos disponibles
-	        List<Grupo> grupos = session.createQuery("FROM Grupo", Grupo.class).list();
-	        if (grupos.isEmpty()) {
-	            System.out.println("❌ No hay grupos disponibles.");
+	        if (!mostrarTodosLosGrupos()) {
+	            System.out.println("❌ No hay grupos disponibles para seleccionar.");
 	            return false;
 	        }
 
-	        System.out.println("\nGrupos disponibles:");
-	        for (Grupo grupo : grupos) {
-	            System.out.println("- " + grupo.getNombreGrupo());
-	        }
+	        // Solicitar el nombre del grupo al usuario
+	        System.out.print("\nIntroduce el nombre del grupo que deseas guardar en fichero XML: ");
+	        String nombreGrupo = sc.nextLine().trim().toUpperCase();
 
-	        System.out.println("\nIntroduce el nombre del grupo al que deseas cambiar al alumno:");
-	        String nuevoGrupo = sc.nextLine().trim().toUpperCase();
-
-	        Grupo grupo = session.createQuery("FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
-	                .setParameter("nombreGrupo", nuevoGrupo)
+	        // Obtener el grupo con sus alumnos usando JOIN FETCH
+	        Grupo grupo = session.createQuery(
+	                "SELECT g FROM Grupo g LEFT JOIN FETCH g.alumnos WHERE g.nombreGrupo = :nombreGrupo", Grupo.class)
+	                .setParameter("nombreGrupo", nombreGrupo)
 	                .uniqueResult();
 
 	        if (grupo == null) {
-	            System.out.println("❌ El grupo especificado no existe.");
+	            System.out.println("❌ El grupo '" + nombreGrupo + "' no existe.");
 	            return false;
 	        }
 
-	        if (alumno.getGrupo() != null && alumno.getGrupo().getNombreGrupo().equals(nuevoGrupo)) {
-	            System.out.println("⚠️ El alumno ya pertenece al grupo '" + nuevoGrupo + "'.");
-	            return false;
+	        // Nombre del archivo XML
+	        String nombreArchivo = "grupo_" + nombreGrupo + ".xml";
+	        File archivoXML = new File(nombreArchivo);
+
+	        // Verificar si el archivo ya existe
+	        if (archivoXML.exists()) {
+	            System.out.print("⚠️ El archivo '" + nombreArchivo + "' ya existe. ¿Deseas sobrescribirlo? (S/N): ");
+	            String respuesta = sc.nextLine().trim().toUpperCase();
+	            if (!respuesta.equals("S")) {
+	                System.out.println("🚫 Operación cancelada por el usuario.");
+	                return false;
+	            }
 	        }
 
-	        alumno.setGrupo(grupo);
-	        session.merge(alumno);
+	        // Crear el documento XML
+	        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	        DocumentBuilder builder = factory.newDocumentBuilder();
+	        Document doc = builder.newDocument();
 
-	        tx.commit();
-	        System.out.println("✅ El grupo del alumno ha sido cambiado exitosamente.");
+	        // Crear el elemento raíz <grupo>
+	        Element grupoElement = doc.createElement("grupo");
+	        grupoElement.setAttribute("numeroGrupo", String.valueOf(grupo.getNumeroGrupo()));
+	        grupoElement.setAttribute("nombreGrupo", grupo.getNombreGrupo());
+	        doc.appendChild(grupoElement);
+
+	        // Agregar alumnos al XML
+	        for (Alumno alumno : grupo.getAlumnos()) {
+	            Element alumnoElement = doc.createElement("alumno");
+	            alumnoElement.setAttribute("nia", String.valueOf(alumno.getNia()));
+	            alumnoElement.setAttribute("nombre", alumno.getNombre());
+	            alumnoElement.setAttribute("apellidos", alumno.getApellidos());
+	            alumnoElement.setAttribute("genero", String.valueOf(alumno.getGenero()));
+	            alumnoElement.setAttribute("fechaNacimiento", new SimpleDateFormat("dd-MM-yyyy").format(alumno.getFechaNacimiento()));
+	            alumnoElement.setAttribute("ciclo", alumno.getCiclo());
+	            alumnoElement.setAttribute("curso", alumno.getCurso());
+
+	            grupoElement.appendChild(alumnoElement);
+	        }
+
+	        // Guardar el archivo XML
+	        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+	        Transformer transformer = transformerFactory.newTransformer();
+	        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+	        DOMSource source = new DOMSource(doc);
+	        StreamResult result = new StreamResult(new File(nombreArchivo));
+	        transformer.transform(source, result);
+
+	        System.out.println("✅ El archivo XML del grupo '" + nombreGrupo + "' se ha guardado correctamente en '" + nombreArchivo + "'.");
 	        return true;
+
 	    } catch (Exception e) {
-	        System.out.println("❌ Error al cambiar el grupo del alumno: " + e.getMessage());
+	        System.out.println("❌ Error al guardar el grupo en XML: " + e.getMessage());
+	        e.printStackTrace();
 	        return false;
 	    }
 	}
@@ -806,9 +886,4 @@ public class AlumnosHibernate implements AlumnosDAO {
 		return false;
 	}
 
-	@Override
-	public boolean guardarGrupoEspecificoEnXML() {
-		// TODO Auto-generated method stub
-		return false;
-	}
 }

@@ -1,15 +1,12 @@
 package vista;
 
 import java.io.File;
-import java.sql.Connection;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import modelo.Alumno;
-import modelo.AlumnosBD;
 import modelo.AlumnosDAO;
 import modelo.Grupo;
-import pool.PoolConexiones;
 
 public class VistaConsola implements IVista {
 
@@ -78,12 +75,11 @@ public class VistaConsola implements IVista {
 		case 9 -> guardarGruposEnXML(modelo);
 		case 10 -> leerYGuardarGruposXML(modelo);
 		case 11 -> mostrarAlumnosPorGrupo(modelo);
-		case 12 -> mostrarTodosLosAlumnos(modelo, false); // Mostrará, inicialmente, el nia y el nombre de todos los
-															// alumnos
+		case 12 -> mostrarTodosLosAlumnos(modelo, false); // Muestra, 1º, el nia y el nombre de todos los alumnos
 		case 13 -> cambiarGrupoAlumno(modelo);
 		case 14 -> guardarGrupoEspecificoEnXML(modelo);
-		case 0 -> System.out.println("Saliendo del programa...");
-		default -> System.out.println("Opción no válida. Intenta de nuevo.");
+		case 0 -> System.out.println("Finalizando del programa...");
+		default -> System.out.println("Opción no válida. Intenténtelo de nuevo.");
 		}
 	}
 
@@ -356,17 +352,20 @@ public class VistaConsola implements IVista {
 	 * Guarda un grupo específico con toda su información (incluyendo los alumnos)
 	 * en un archivo XML.
 	 * 
-	 * @param conexionBD  La conexión activa a la base de datos MySQL.
-	 * @param numeroGrupo El número del grupo que se desea guardar.
-	 * @return true si el archivo se guarda correctamente, false si ocurre un error.
+	 * @param modelo Objeto DAO para la gestión de alumnos y grupos.
 	 */
 
 	public void guardarGrupoEspecificoEnXML(AlumnosDAO modelo) {
-		try (Connection conexionBD = PoolConexiones.getConnection()) {
-			// Llamar al método guardarGrupoEspecificoEnXML desde el modelo (AlumnosBD)
-			((AlumnosBD) modelo).guardarGrupoEspecificoEnXML();
+		try {
+			if (modelo.guardarGrupoEspecificoEnXML()) {
+				System.out.println("✅ El grupo se ha guardado correctamente en un archivo XML.");
+			} else {
+				System.out.println("❌ No se pudo guardar el grupo en XML.");
+			}
 		} catch (Exception e) {
-			System.out.println("Se produjo un error al intentar cambiar al alumno de grupo. Revisa los logs.");
+			System.out.println("❌ Se produjo un error al guardar el grupo en XML. Revisa los logs.");
+			e.printStackTrace();
 		}
 	}
+
 }

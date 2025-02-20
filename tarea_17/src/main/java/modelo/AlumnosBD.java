@@ -1009,34 +1009,34 @@ public class AlumnosBD implements AlumnosDAO {
 			System.out.println("Se produjo un error al intentar mostrar los alumnos. Revisa los logs.");
 		}
 	}
-	
+
 	/**
 	 * Muestra solo los NIA y nombres de los alumnos, sin interacción adicional.
 	 * 
 	 * @return true si hay alumnos, false si la lista está vacía.
 	 */
 	public boolean listarNiasYNombresAlumnos() {
-	    String sql = "SELECT nia, nombre FROM alumnos ORDER BY nia";
+		String sql = "SELECT nia, nombre FROM alumnos ORDER BY nia";
 
-	    try (Connection conexion = PoolConexiones.getConnection();
-	         PreparedStatement sentencia = conexion.prepareStatement(sql);
-	         ResultSet resultado = sentencia.executeQuery()) {
+		try (Connection conexion = PoolConexiones.getConnection();
+				PreparedStatement sentencia = conexion.prepareStatement(sql);
+				ResultSet resultado = sentencia.executeQuery()) {
 
-	        if (!resultado.isBeforeFirst()) {
-	            System.out.println("❌ No hay alumnos registrados.");
-	            return false;
-	        }
+			if (!resultado.isBeforeFirst()) {
+				System.out.println("❌ No hay alumnos registrados.");
+				return false;
+			}
 
-	        System.out.println("Lista de alumnos disponibles para cambiar de grupo:");
-	        while (resultado.next()) {
-	            System.out.printf("NIA: %d, Nombre: %s%n", resultado.getInt("nia"), resultado.getString("nombre"));
-	        }
+			System.out.println("Lista de alumnos disponibles para cambiar de grupo:");
+			while (resultado.next()) {
+				System.out.printf("NIA: %d, Nombre: %s%n", resultado.getInt("nia"), resultado.getString("nombre"));
+			}
 
-	        return true;
-	    } catch (SQLException e) {
-	        System.out.println("❌ Error al recuperar la lista de alumnos: " + e.getMessage());
-	        return false;
-	    }
+			return true;
+		} catch (SQLException e) {
+			System.out.println("❌ Error al recuperar la lista de alumnos: " + e.getMessage());
+			return false;
+		}
 	}
 
 	/**
@@ -1046,85 +1046,85 @@ public class AlumnosBD implements AlumnosDAO {
 	 */
 	@Override
 	public boolean cambiarGrupoAlumno() {
-	    // Mostrar lista de alumnos sin interacción extra
-	    if (!listarNiasYNombresAlumnos()) {
-	        System.out.println("❌ No hay alumnos disponibles.");
-	        return false;
-	    }
+		// Mostrar lista de alumnos sin interacción extra
+		if (!listarNiasYNombresAlumnos()) {
+			System.out.println("❌ No hay alumnos disponibles.");
+			return false;
+		}
 
-	    // Solicitar NIA del alumno
-	    System.out.println("\nIntroduce el NIA del alumno al que deseas cambiar de grupo:");
-	    int niaSeleccionado;
-	    try {
-	        niaSeleccionado = Integer.parseInt(sc.nextLine().trim());
-	    } catch (NumberFormatException e) {
-	        System.out.println("❌ El NIA debe ser un número válido.");
-	        return false;
-	    }
+		// Solicitar NIA del alumno
+		System.out.println("\nIntroduce el NIA del alumno al que deseas cambiar de grupo:");
+		int niaSeleccionado;
+		try {
+			niaSeleccionado = Integer.parseInt(sc.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("❌ El NIA debe ser un número válido.");
+			return false;
+		}
 
-	    // Verificar si el NIA existe
-	    String sqlExistencia = "SELECT numeroGrupo FROM alumnos WHERE nia = ?";
-	    int grupoActual = -1;
+		// Verificar si el NIA existe
+		String sqlExistencia = "SELECT numeroGrupo FROM alumnos WHERE nia = ?";
+		int grupoActual = -1;
 
-	    try (Connection conexion = PoolConexiones.getConnection();
-	         PreparedStatement consulta = conexion.prepareStatement(sqlExistencia)) {
+		try (Connection conexion = PoolConexiones.getConnection();
+				PreparedStatement consulta = conexion.prepareStatement(sqlExistencia)) {
 
-	        consulta.setInt(1, niaSeleccionado);
-	        try (ResultSet resultado = consulta.executeQuery()) {
-	            if (resultado.next()) {
-	                grupoActual = resultado.getInt("numeroGrupo");
-	            } else {
-	                System.out.println("❌ No se encontró ningún alumno con el NIA proporcionado.");
-	                return false;
-	            }
-	        }
-	    } catch (SQLException e) {
-	        System.out.println("❌ Error al verificar el grupo actual del alumno: " + e.getMessage());
-	        return false;
-	    }
+			consulta.setInt(1, niaSeleccionado);
+			try (ResultSet resultado = consulta.executeQuery()) {
+				if (resultado.next()) {
+					grupoActual = resultado.getInt("numeroGrupo");
+				} else {
+					System.out.println("❌ No se encontró ningún alumno con el NIA proporcionado.");
+					return false;
+				}
+			}
+		} catch (SQLException e) {
+			System.out.println("❌ Error al verificar el grupo actual del alumno: " + e.getMessage());
+			return false;
+		}
 
-	    // Mostrar grupos disponibles
-	    System.out.println("\nGrupos disponibles:");
-	    if (!mostrarTodosLosGrupos()) {
-	        System.out.println("❌ No hay grupos disponibles.");
-	        return false;
-	    }
+		// Mostrar grupos disponibles
+		System.out.println("\nGrupos disponibles:");
+		if (!mostrarTodosLosGrupos()) {
+			System.out.println("❌ No hay grupos disponibles.");
+			return false;
+		}
 
-	    // Solicitar el nuevo grupo
-	    System.out.println("\nIntroduce el nombre del grupo al que deseas cambiar al alumno:");
-	    String nuevoGrupo = sc.nextLine().trim().toUpperCase();
+		// Solicitar el nuevo grupo
+		System.out.println("\nIntroduce el nombre del grupo al que deseas cambiar al alumno:");
+		String nuevoGrupo = sc.nextLine().trim().toUpperCase();
 
-	    int numeroGrupo = obtenerNumeroGrupoPorNombre(nuevoGrupo);
-	    if (numeroGrupo == -1) {
-	        System.out.println("❌ El grupo especificado no existe.");
-	        return false;
-	    }
+		int numeroGrupo = obtenerNumeroGrupoPorNombre(nuevoGrupo);
+		if (numeroGrupo == -1) {
+			System.out.println("❌ El grupo especificado no existe.");
+			return false;
+		}
 
-	    if (grupoActual == numeroGrupo) {
-	        System.out.println("⚠️ El alumno ya pertenece al grupo '" + nuevoGrupo + "'.");
-	        return false;
-	    }
+		if (grupoActual == numeroGrupo) {
+			System.out.println("⚠️ El alumno ya pertenece al grupo '" + nuevoGrupo + "'.");
+			return false;
+		}
 
-	    // Actualizar grupo
-	    String sqlUpdate = "UPDATE alumnos SET numeroGrupo = ? WHERE nia = ?";
-	    try (Connection conexion = PoolConexiones.getConnection();
-	         PreparedStatement sentencia = conexion.prepareStatement(sqlUpdate)) {
+		// Actualizar grupo
+		String sqlUpdate = "UPDATE alumnos SET numeroGrupo = ? WHERE nia = ?";
+		try (Connection conexion = PoolConexiones.getConnection();
+				PreparedStatement sentencia = conexion.prepareStatement(sqlUpdate)) {
 
-	        sentencia.setInt(1, numeroGrupo);
-	        sentencia.setInt(2, niaSeleccionado);
+			sentencia.setInt(1, numeroGrupo);
+			sentencia.setInt(2, niaSeleccionado);
 
-	        int filasAfectadas = sentencia.executeUpdate();
-	        if (filasAfectadas > 0) {
-	            System.out.println("✅ El grupo del alumno ha sido cambiado exitosamente.");
-	            return true;
-	        } else {
-	            System.out.println("❌ No se pudo cambiar el grupo del alumno.");
-	            return false;
-	        }
-	    } catch (SQLException e) {
-	        System.out.println("❌ Error al cambiar el grupo del alumno: " + e.getMessage());
-	        return false;
-	    }
+			int filasAfectadas = sentencia.executeUpdate();
+			if (filasAfectadas > 0) {
+				System.out.println("✅ El grupo del alumno ha sido cambiado exitosamente.");
+				return true;
+			} else {
+				System.out.println("❌ No se pudo cambiar el grupo del alumno.");
+				return false;
+			}
+		} catch (SQLException e) {
+			System.out.println("❌ Error al cambiar el grupo del alumno: " + e.getMessage());
+			return false;
+		}
 	}
 
 	/**
@@ -1135,12 +1135,19 @@ public class AlumnosBD implements AlumnosDAO {
 	 */
 	@Override
 	public boolean guardarGrupoEspecificoEnXML() {
-		System.out.print("Introduce el nombre del grupo que deseas guardar en fichero XML: ");
+		// 📌 Mostrar los grupos disponibles antes de la elección
+		if (!mostrarTodosLosGrupos()) {
+			System.out.println("❌ No hay grupos disponibles. No se puede continuar.");
+			return false;
+		}
+
+		// Solicitar el nombre del grupo al usuario
+		System.out.print("\nIntroduce el nombre del grupo que deseas guardar en fichero XML: ");
 		String nombreGrupo = sc.nextLine().trim().toUpperCase();
 
 		// Validar si el grupo existe
 		if (!validarNombreGrupo(nombreGrupo)) {
-			System.out.println("El grupo '" + nombreGrupo + "' no existe en la base de datos.");
+			System.out.println("❌ El grupo '" + nombreGrupo + "' no existe en la base de datos.");
 			loggerGeneral.warn("El grupo '{}' no existe en la base de datos.", nombreGrupo);
 			return false;
 		}
@@ -1148,7 +1155,7 @@ public class AlumnosBD implements AlumnosDAO {
 		// Obtener el número del grupo
 		int numeroGrupo = obtenerNumeroGrupoPorNombre(nombreGrupo);
 		if (numeroGrupo == -1) {
-			System.out.println("Error al obtener el número del grupo para: " + nombreGrupo);
+			System.out.println("❌ Error al obtener el número del grupo para: " + nombreGrupo);
 			loggerGeneral.error("No se pudo obtener el número del grupo para '{}'.", nombreGrupo);
 			return false;
 		}
@@ -1156,13 +1163,12 @@ public class AlumnosBD implements AlumnosDAO {
 		String nombreArchivo = "grupo_" + nombreGrupo + ".xml";
 		File archivoXML = new File(nombreArchivo);
 
+		// Verificar si el archivo ya existe y preguntar si sobrescribir
 		if (archivoXML.exists()) {
-			System.out.print("El archivo " + nombreArchivo + " ya existe. ¿Deseas sobrescribirlo? (S/N): ");
+			System.out.print("⚠️ El archivo '" + nombreArchivo + "' ya existe. ¿Deseas sobrescribirlo? (S/N): ");
 			String respuesta = sc.nextLine().trim().toUpperCase();
-
 			if (!respuesta.equals("S")) {
-				loggerGeneral.warn("No se ha sobrescrito el archivo XML porque el usuario no lo permitió.");
-				System.out.println("El archivo no se ha sobrescrito.");
+				System.out.println("❌ Operación cancelada. El archivo no se ha sobrescrito.");
 				return false;
 			}
 		}
@@ -1185,18 +1191,20 @@ public class AlumnosBD implements AlumnosDAO {
 					PreparedStatement stmtGrupo = conexion.prepareStatement(consultaGrupo);
 					PreparedStatement stmtAlumnos = conexion.prepareStatement(consultaAlumnos)) {
 
+				// Obtener la información del grupo
 				stmtGrupo.setInt(1, numeroGrupo);
 				try (ResultSet rsGrupo = stmtGrupo.executeQuery()) {
 					if (rsGrupo.next()) {
 						raizElement.setAttribute("numeroGrupo", String.valueOf(numeroGrupo));
 						raizElement.setAttribute("nombreGrupo", rsGrupo.getString("nombreGrupo"));
 					} else {
-						System.out.println("No se encontró el grupo con el número " + numeroGrupo + ".");
+						System.out.println("❌ No se encontró el grupo con el número " + numeroGrupo + ".");
 						loggerGeneral.warn("El grupo con número {} no existe en la base de datos.", numeroGrupo);
 						return false;
 					}
 				}
 
+				// Obtener la información de los alumnos del grupo
 				stmtAlumnos.setInt(1, numeroGrupo);
 				try (ResultSet rsAlumnos = stmtAlumnos.executeQuery()) {
 					while (rsAlumnos.next()) {
@@ -1212,6 +1220,7 @@ public class AlumnosBD implements AlumnosDAO {
 					}
 				}
 
+				// Guardar el archivo XML
 				TransformerFactory transformerFactory = TransformerFactory.newInstance();
 				Transformer transformer = transformerFactory.newTransformer();
 				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -1220,25 +1229,23 @@ public class AlumnosBD implements AlumnosDAO {
 				StreamResult result = new StreamResult(new File(nombreArchivo));
 				transformer.transform(source, result);
 
-				loggerGeneral.info("El archivo XML del grupo {} se ha guardado correctamente en {}", numeroGrupo,
+				loggerGeneral.info("✅ El archivo XML del grupo {} se ha guardado correctamente en '{}'.", nombreGrupo,
 						nombreArchivo);
-				System.out.println("El archivo XML del grupo " + nombreGrupo + " se ha guardado correctamente.");
+				System.out.println("✅ El archivo XML del grupo '" + nombreGrupo + "' se ha guardado correctamente en '"
+						+ nombreArchivo + "'.");
 				return true;
 
 			} catch (SQLException e) {
-				loggerExcepciones.error("Error al consultar el grupo o los alumnos: {}", e.getMessage(), e);
-				System.out.println("Error al consultar el grupo o los alumnos: " + e.getMessage());
+				loggerExcepciones.error("❌ Error al consultar el grupo o los alumnos: {}", e.getMessage(), e);
+				System.out.println("❌ Error al consultar el grupo o los alumnos: " + e.getMessage());
 			}
 		} catch (ParserConfigurationException | TransformerException e) {
-			loggerExcepciones.error("Error al generar el archivo XML: {}", e.getMessage(), e);
-			System.out.println("Error al generar el archivo XML: " + e.getMessage());
+			loggerExcepciones.error("❌ Error al generar el archivo XML: {}", e.getMessage(), e);
+			System.out.println("❌ Error al generar el archivo XML: " + e.getMessage());
 		}
 
 		return false;
 	}
-	
-
-
 
 	@Override
 	public boolean eliminarAlumnosPorApellidos(String apellidos) {
