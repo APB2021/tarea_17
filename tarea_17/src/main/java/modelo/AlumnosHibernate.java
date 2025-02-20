@@ -681,7 +681,85 @@ public class AlumnosHibernate implements AlumnosDAO {
 		}
 	}
 
-	//
+	// 13. Cambiar de grupo al alumno que elija el usuario.
+
+	@Override
+	public boolean cambiarGrupoAlumno() {
+	    try (Session session = getSession()) {
+	        Transaction tx = session.beginTransaction();
+
+	        // Mostrar todos los alumnos
+	        List<Alumno> alumnos = session.createQuery("FROM Alumno", Alumno.class).list();
+	        if (alumnos.isEmpty()) {
+	            System.out.println("❌ No hay alumnos disponibles.");
+	            return false;
+	        }
+
+	        System.out.println("Lista de alumnos disponibles para cambiar de grupo:");
+	        for (Alumno alumno : alumnos) {
+	            System.out.printf("NIA: %d, Nombre: %s%n", alumno.getNia(), alumno.getNombre());
+	        }
+
+	        // Solicitar NIA del alumno
+	        System.out.println("\nIntroduce el NIA del alumno al que deseas cambiar de grupo:");
+	        int niaSeleccionado;
+	        try {
+	            niaSeleccionado = Integer.parseInt(sc.nextLine().trim());
+	        } catch (NumberFormatException e) {
+	            System.out.println("❌ El NIA debe ser un número.");
+	            return false;
+	        }
+
+	        Alumno alumno = session.get(Alumno.class, niaSeleccionado);
+	        if (alumno == null) {
+	            System.out.println("❌ No se encontró ningún alumno con el NIA proporcionado.");
+	            return false;
+	        }
+
+	        // Mostrar todos los grupos
+	        List<Grupo> grupos = session.createQuery("FROM Grupo", Grupo.class).list();
+	        if (grupos.isEmpty()) {
+	            System.out.println("❌ No hay grupos disponibles.");
+	            return false;
+	        }
+
+	        System.out.println("\nGrupos disponibles:");
+	        for (Grupo grupo : grupos) {
+	            System.out.println("- " + grupo.getNombreGrupo());
+	        }
+
+	        // Solicitar nuevo grupo
+	        System.out.println("\nIntroduce el nombre del grupo al que deseas cambiar al alumno:");
+	        String nuevoGrupo = sc.nextLine().trim().toUpperCase();
+
+	        Grupo grupo = session.createQuery("FROM Grupo WHERE nombreGrupo = :nombreGrupo", Grupo.class)
+	                .setParameter("nombreGrupo", nuevoGrupo)
+	                .uniqueResult();
+
+	        if (grupo == null) {
+	            System.out.println("❌ El grupo especificado no existe.");
+	            return false;
+	        }
+
+	        // Verificar si ya está en el grupo
+	        if (alumno.getGrupo() != null && alumno.getGrupo().getNombreGrupo().equals(nuevoGrupo)) {
+	            System.out.println("⚠️ El alumno ya pertenece al grupo '" + nuevoGrupo + "'.");
+	            return false;
+	        }
+
+	        // Actualizar el grupo
+	        alumno.setGrupo(grupo);
+	        session.merge(alumno);
+
+	        tx.commit();
+	        System.out.println("✅ El grupo del alumno ha sido cambiado exitosamente.");
+	        return true;
+
+	    } catch (Exception e) {
+	        System.out.println("❌ Se produjo un error al cambiar el grupo: " + e.getMessage());
+	        return false;
+	    }
+	}
 
 	@Override
 	public boolean eliminarAlumnosPorApellidos(String apellidos) {
@@ -709,12 +787,6 @@ public class AlumnosHibernate implements AlumnosDAO {
 
 	@Override
 	public boolean leerGruposDeFicheroJSON() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean cambiarGrupoAlumno() {
 		// TODO Auto-generated method stub
 		return false;
 	}

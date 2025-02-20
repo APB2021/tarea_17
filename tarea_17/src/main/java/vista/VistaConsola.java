@@ -342,16 +342,17 @@ public class VistaConsola implements IVista {
 	/**
 	 * Cambia de grupo al alumno seleccionado por el usuario.
 	 * 
-	 * @param modelo Objeto que implementa la interfaz IAlumnosDao para realizar
-	 *               operaciones con la base de datos.
+	 * @param modelo Objeto DAO para la gestión de alumnos y grupos.
 	 */
-
 	public void cambiarGrupoAlumno(AlumnosDAO modelo) {
-		try (Connection conexionBD = PoolConexiones.getConnection()) {
-			// Llamar al método cambiarGrupoAlumno desde el modelo (AlumnosBD)
-			((AlumnosBD) modelo).cambiarGrupoAlumno();
+		try {
+			if (modelo.cambiarGrupoAlumno()) {
+				System.out.println("✅ El grupo del alumno ha sido cambiado exitosamente.");
+			} else {
+				System.out.println("❌ No se pudo cambiar el grupo del alumno.");
+			}
 		} catch (Exception e) {
-			System.out.println("Se produjo un error al intentar cambiar al alumno de grupo. Revisa los logs.");
+			System.out.println("❌ Se produjo un error al intentar cambiar el grupo del alumno: " + e.getMessage());
 		}
 	}
 
