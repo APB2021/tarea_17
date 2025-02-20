@@ -346,13 +346,9 @@ public class VistaConsola implements IVista {
 	 */
 	public void cambiarGrupoAlumno(AlumnosDAO modelo) {
 		try {
-			if (modelo.cambiarGrupoAlumno()) {
-				System.out.println("✅ El grupo del alumno ha sido cambiado exitosamente.");
-			} else {
-				System.out.println("❌ No se pudo cambiar el grupo del alumno.");
-			}
+			modelo.cambiarGrupoAlumno(); // ✅ Solo ejecuta la acción sin mostrar mensajes adicionales.
 		} catch (Exception e) {
-			System.out.println("❌ Se produjo un error al intentar cambiar el grupo del alumno: " + e.getMessage());
+			System.out.println("❌ Se produjo un error al intentar cambiar al alumno de grupo. Revisa los logs.");
 		}
 	}
 

@@ -1009,6 +1009,35 @@ public class AlumnosBD implements AlumnosDAO {
 			System.out.println("Se produjo un error al intentar mostrar los alumnos. Revisa los logs.");
 		}
 	}
+	
+	/**
+	 * Muestra solo los NIA y nombres de los alumnos, sin interacción adicional.
+	 * 
+	 * @return true si hay alumnos, false si la lista está vacía.
+	 */
+	public boolean listarNiasYNombresAlumnos() {
+	    String sql = "SELECT nia, nombre FROM alumnos ORDER BY nia";
+
+	    try (Connection conexion = PoolConexiones.getConnection();
+	         PreparedStatement sentencia = conexion.prepareStatement(sql);
+	         ResultSet resultado = sentencia.executeQuery()) {
+
+	        if (!resultado.isBeforeFirst()) {
+	            System.out.println("❌ No hay alumnos registrados.");
+	            return false;
+	        }
+
+	        System.out.println("Lista de alumnos disponibles para cambiar de grupo:");
+	        while (resultado.next()) {
+	            System.out.printf("NIA: %d, Nombre: %s%n", resultado.getInt("nia"), resultado.getString("nombre"));
+	        }
+
+	        return true;
+	    } catch (SQLException e) {
+	        System.out.println("❌ Error al recuperar la lista de alumnos: " + e.getMessage());
+	        return false;
+	    }
+	}
 
 	/**
 	 * Cambia el grupo de un alumno seleccionado por el usuario.
@@ -1017,29 +1046,51 @@ public class AlumnosBD implements AlumnosDAO {
 	 */
 	@Override
 	public boolean cambiarGrupoAlumno() {
-	    System.out.println("Lista de alumnos disponibles para cambiar de grupo:");
-	    if (!mostrarTodosLosAlumnos(false)) {
-	        System.out.println("No hay alumnos disponibles.");
+	    // Mostrar lista de alumnos sin interacción extra
+	    if (!listarNiasYNombresAlumnos()) {
+	        System.out.println("❌ No hay alumnos disponibles.");
 	        return false;
 	    }
 
+	    // Solicitar NIA del alumno
 	    System.out.println("\nIntroduce el NIA del alumno al que deseas cambiar de grupo:");
 	    int niaSeleccionado;
-	    while (true) {
-	        try {
-	            niaSeleccionado = Integer.parseInt(sc.nextLine().trim());
-	            break;
-	        } catch (NumberFormatException e) {
-	            System.out.println("❌ El NIA debe ser un número. Inténtalo de nuevo.");
-	        }
-	    }
-
-	    System.out.println("\nLista de grupos disponibles:");
-	    if (!mostrarTodosLosGrupos()) {
-	        System.out.println("No hay grupos disponibles.");
+	    try {
+	        niaSeleccionado = Integer.parseInt(sc.nextLine().trim());
+	    } catch (NumberFormatException e) {
+	        System.out.println("❌ El NIA debe ser un número válido.");
 	        return false;
 	    }
 
+	    // Verificar si el NIA existe
+	    String sqlExistencia = "SELECT numeroGrupo FROM alumnos WHERE nia = ?";
+	    int grupoActual = -1;
+
+	    try (Connection conexion = PoolConexiones.getConnection();
+	         PreparedStatement consulta = conexion.prepareStatement(sqlExistencia)) {
+
+	        consulta.setInt(1, niaSeleccionado);
+	        try (ResultSet resultado = consulta.executeQuery()) {
+	            if (resultado.next()) {
+	                grupoActual = resultado.getInt("numeroGrupo");
+	            } else {
+	                System.out.println("❌ No se encontró ningún alumno con el NIA proporcionado.");
+	                return false;
+	            }
+	        }
+	    } catch (SQLException e) {
+	        System.out.println("❌ Error al verificar el grupo actual del alumno: " + e.getMessage());
+	        return false;
+	    }
+
+	    // Mostrar grupos disponibles
+	    System.out.println("\nGrupos disponibles:");
+	    if (!mostrarTodosLosGrupos()) {
+	        System.out.println("❌ No hay grupos disponibles.");
+	        return false;
+	    }
+
+	    // Solicitar el nuevo grupo
 	    System.out.println("\nIntroduce el nombre del grupo al que deseas cambiar al alumno:");
 	    String nuevoGrupo = sc.nextLine().trim().toUpperCase();
 
@@ -1049,29 +1100,12 @@ public class AlumnosBD implements AlumnosDAO {
 	        return false;
 	    }
 
-	    // Verificar si el alumno ya está en ese grupo
-	    String consultaExistencia = """
-	        SELECT numeroGrupo 
-	        FROM alumnos 
-	        WHERE nia = ?
-	    """;
-
-	    try (Connection conexion = PoolConexiones.getConnection();
-	         PreparedStatement consulta = conexion.prepareStatement(consultaExistencia)) {
-
-	        consulta.setInt(1, niaSeleccionado);
-	        try (ResultSet resultado = consulta.executeQuery()) {
-	            if (resultado.next() && resultado.getInt("numeroGrupo") == numeroGrupo) {
-	                System.out.println("⚠️ El alumno ya pertenece al grupo '" + nuevoGrupo + "'.");
-	                return false;
-	            }
-	        }
-	    } catch (SQLException e) {
-	        System.out.println("❌ Error al verificar el grupo actual del alumno: " + e.getMessage());
+	    if (grupoActual == numeroGrupo) {
+	        System.out.println("⚠️ El alumno ya pertenece al grupo '" + nuevoGrupo + "'.");
 	        return false;
 	    }
 
-	    // Actualizar el grupo del alumno
+	    // Actualizar grupo
 	    String sqlUpdate = "UPDATE alumnos SET numeroGrupo = ? WHERE nia = ?";
 	    try (Connection conexion = PoolConexiones.getConnection();
 	         PreparedStatement sentencia = conexion.prepareStatement(sqlUpdate)) {
@@ -1082,10 +1116,9 @@ public class AlumnosBD implements AlumnosDAO {
 	        int filasAfectadas = sentencia.executeUpdate();
 	        if (filasAfectadas > 0) {
 	            System.out.println("✅ El grupo del alumno ha sido cambiado exitosamente.");
-	            loggerGeneral.info("Grupo del alumno con NIA {} cambiado al grupo '{}'.", niaSeleccionado, nuevoGrupo);
 	            return true;
 	        } else {
-	            System.out.println("❌ No se pudo cambiar el grupo. Verifica el NIA.");
+	            System.out.println("❌ No se pudo cambiar el grupo del alumno.");
 	            return false;
 	        }
 	    } catch (SQLException e) {
@@ -1203,6 +1236,9 @@ public class AlumnosBD implements AlumnosDAO {
 
 		return false;
 	}
+	
+
+
 
 	@Override
 	public boolean eliminarAlumnosPorApellidos(String apellidos) {
